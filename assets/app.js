@@ -1,0 +1,397 @@
+/* Grade 2 Homework website: login, children, settings, admin.
+   Talks to Supabase's REST and Auth APIs directly with fetch (no outside libraries).
+   Anything a user typed is shown with textContent, never as HTML. */
+(function (root) {
+  'use strict';
+
+  var SESSION_KEY = 'g2hw.session';
+  var GRADES = { 0: 'Kindergarten', 1: 'Grade 1', 2: 'Grade 2', 3: 'Grade 3', 4: 'Grade 4', 5: 'Grade 5', 6: 'Grade 6',
+    7: 'Grade 7', 8: 'Grade 8', 9: 'Grade 9', 10: 'Grade 10', 11: 'Grade 11', 12: 'Grade 12' };
+  var READY_GRADES = [2];  // grades that have worksheets today; more are added over time
+  var LEVELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+  var PROVINCES = {
+    AB: ['Alberta', 'America/Edmonton'], BC: ['British Columbia', 'America/Vancouver'], MB: ['Manitoba', 'America/Winnipeg'],
+    NB: ['New Brunswick', 'America/Moncton'], NL: ['Newfoundland and Labrador', 'America/St_Johns'],
+    NS: ['Nova Scotia', 'America/Halifax'], NT: ['Northwest Territories', 'America/Yellowknife'], NU: ['Nunavut', 'America/Iqaluit'],
+    ON: ['Ontario', 'America/Toronto'], PE: ['Prince Edward Island', 'America/Halifax'], QC: ['Quebec', 'America/Toronto'],
+    SK: ['Saskatchewan', 'America/Regina'], YT: ['Yukon', 'America/Whitehorse']
+  };
+  var TIME_ZONES = {
+    'America/St_Johns': 'Newfoundland time', 'America/Halifax': 'Atlantic time (Halifax)', 'America/Moncton': 'Atlantic time (Moncton)',
+    'America/Toronto': 'Eastern time', 'America/Winnipeg': 'Central time', 'America/Regina': 'Saskatchewan time',
+    'America/Edmonton': 'Mountain time', 'America/Vancouver': 'Pacific time', 'America/Whitehorse': 'Yukon time',
+    'America/Yellowknife': 'Mountain time (Yellowknife)', 'America/Iqaluit': 'Eastern time (Iqaluit)'
+  };
+
+  function has(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); }
+
+  // ------------------------------------------------------------------ Supabase client
+
+  function AppError(message, status) { this.message = message; this.status = status || 0; }
+  AppError.prototype = Object.create(Error.prototype);
+  AppError.prototype.name = 'AppError';
+
+  function friendly(status, data) {
+    var raw = data && (data.error_description || data.msg || data.message || data.error) || '';
+    var text = String(raw).toLowerCase();
+    if (text.indexOf('invalid login') >= 0) return 'Wrong email or password.';
+    if (text.indexOf('already registered') >= 0 || text.indexOf('already been registered') >= 0) return 'That email already has an account. Try logging in.';
+    if (text.indexOf('email not confirmed') >= 0) return 'Please confirm your email first. Check your inbox.';
+    if (text.indexOf('password') >= 0 && text.indexOf('characters') >= 0) return 'Your password must be at least 8 characters.';
+    if (text.indexOf('up to 6 children') >= 0) return 'You can add up to 6 children.';
+    if (text.indexOf('admins only') >= 0) return 'This page is for admins only.';
+    if (status === 429) return 'Too many tries. Please wait a minute and try again.';
+    if (status === 401 || text.indexOf('jwt') >= 0) return 'Please log in again.';
+    if (status >= 500) return 'The server had a problem. Please try again in a minute.';
+    return raw ? String(raw).slice(0, 200) : 'Something went wrong (code ' + status + ').';
+  }
+
+  function Client(cfg, deps) {
+    cfg = cfg || {};
+    deps = deps || {};
+    this.url = String(cfg.supabaseUrl || '').replace(/\/+$/, '');
+    this.key = String(cfg.supabaseAnonKey || '');
+    this.fetch = deps.fetch || (root.fetch && root.fetch.bind(root));
+    this.store = deps.storage || null;
+    this.now = deps.now || function () { return Date.now(); };
+  }
+  Client.prototype.configured = function () {
+    return /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(this.url) && this.key.length > 20;
+  };
+  Client.prototype.session = function () {
+    try {
+      var s = JSON.parse(this.store.getItem(SESSION_KEY) || 'null');
+      return s && s.access_token && s.user ? s : null;
+    } catch (e) { return null; }
+  };
+  Client.prototype.saveSession = function (data) {
+    if (!data || !data.access_token || !data.user) throw new AppError('Login failed. Please try again.');
+    var s = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: data.expires_at || Math.floor(this.now() / 1000) + (data.expires_in || 3600),
+      user: { id: data.user.id, email: data.user.email }
+    };
+    try { this.store.setItem(SESSION_KEY, JSON.stringify(s)); } catch (e) { /* private window: stays logged in for this page only */ }
+    return s;
+  };
+  Client.prototype.clearSession = function () {
+    try { this.store.removeItem(SESSION_KEY); } catch (e) { /* ignore */ }
+  };
+  Client.prototype.request = function (method, path, body, opts) {
+    opts = opts || {};
+    var headers = { apikey: this.key, 'Content-Type': 'application/json', Accept: 'application/json' };
+    // A logged-in user's token, or the old-style anon key (a JWT). New 'sb_publishable_' keys go only in apikey.
+    var bearer = opts.token || (/^eyJ/.test(this.key) ? this.key : '');
+    if (bearer) headers.Authorization = 'Bearer ' + bearer;
+    if (opts.prefer) headers.Prefer = opts.prefer;
+    var init = { method: method, headers: headers, credentials: 'omit', cache: 'no-store' };
+    if (body !== undefined) init.body = JSON.stringify(body);
+    return this.fetch(this.url + path, init).then(function (res) {
+      return res.text().then(function (text) {
+        var data = null;
+        if (text) { try { data = JSON.parse(text); } catch (e) { data = { message: text.slice(0, 200) }; } }
+        if (!res.ok) throw new AppError(friendly(res.status, data), res.status);
+        return data;
+      });
+    }, function () {
+      throw new AppError('Could not reach the server. Check your internet connection.');
+    });
+  };
+  Client.prototype.signUp = function (email, password) {
+    var self = this;
+    return this.request('POST', '/auth/v1/signup', { email: email, password: password }).then(function (data) {
+      if (data && data.access_token) { self.saveSession(data); return { loggedIn: true }; }
+      return { loggedIn: false };  // email confirmation is switched on in Supabase
+    });
+  };
+  Client.prototype.signIn = function (email, password) {
+    var self = this;
+    return this.request('POST', '/auth/v1/token?grant_type=password', { email: email, password: password })
+      .then(function (data) { return self.saveSession(data); });
+  };
+  Client.prototype.resetPassword = function (email) {
+    return this.request('POST', '/auth/v1/recover', { email: email });
+  };
+  Client.prototype.token = function () {
+    var self = this, s = this.session();
+    if (!s) return Promise.reject(new AppError('Please log in.', 401));
+    if (s.expires_at - 60 > Math.floor(this.now() / 1000)) return Promise.resolve(s.access_token);
+    return this.request('POST', '/auth/v1/token?grant_type=refresh_token', { refresh_token: s.refresh_token })
+      .then(function (data) { return self.saveSession(data).access_token; }, function (err) {
+        self.clearSession();
+        throw new AppError('Please log in again.', 401);
+      });
+  };
+  Client.prototype.signOut = function () {
+    var self = this, s = this.session();
+    var done = function () { self.clearSession(); };
+    if (!s) { done(); return Promise.resolve(); }
+    return this.request('POST', '/auth/v1/logout', {}, { token: s.access_token }).then(done, done);
+  };
+  Client.prototype.rest = function (method, path, body, prefer) {
+    var self = this;
+    return this.token().then(function (token) {
+      return self.request(method, '/rest/v1/' + path, body, { token: token, prefer: prefer });
+    });
+  };
+  Client.prototype.rpc = function (name, args) {
+    return this.rest('POST', 'rpc/' + name, args || {});
+  };
+
+  // ------------------------------------------------------------------ small DOM helpers
+
+  function el(tag, attrs, kids) {
+    var node = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') node.textContent = attrs[k];
+      else if (k === 'on') Object.keys(attrs.on).forEach(function (ev) { node.addEventListener(ev, attrs.on[ev]); });
+      else if (attrs[k] === true) node.setAttribute(k, '');
+      else if (attrs[k] !== false && attrs[k] != null) node.setAttribute(k, String(attrs[k]));
+    });
+    (kids || []).forEach(function (kid) { if (kid) node.appendChild(typeof kid === 'string' ? document.createTextNode(kid) : kid); });
+    return node;
+  }
+  function options(map, selected, labelOf) {
+    return Object.keys(map).map(function (k) {
+      return el('option', { value: k, selected: String(k) === String(selected) }, [labelOf ? labelOf(k) : map[k]]);
+    });
+  }
+  function say(node, text, ok) {
+    node.textContent = text || '';
+    node.className = 'msg ' + (ok ? 'ok' : 'err');
+  }
+  function busy(button, on) { if (button) button.disabled = !!on; }
+  function validEmail(s) { return /^[^\s@<>,;]+@[^\s@<>,;]+\.[A-Za-z]{2,}$/.test(s) && s.length <= 254; }
+  function validNickname(s) { return /^[^<>&"\r\n\t]{1,30}$/.test(s) && s.trim() !== ''; }
+  function gradeLabel(g) { return has(GRADES, g) ? GRADES[g] : 'Grade ' + g; }
+  function worksheetLink(child) {
+    var q = new URLSearchParams({ grade: String(child.grade), level: child.level, subject: 'all' });
+    return 'homework.html?' + q.toString();
+  }
+
+  // ------------------------------------------------------------------ pages
+
+  function client() {
+    var store = null;
+    try { store = root.localStorage; } catch (e) { store = null; }
+    if (!store) {
+      var mem = {};
+      store = { getItem: function (k) { return has(mem, k) ? mem[k] : null; }, setItem: function (k, v) { mem[k] = v; }, removeItem: function (k) { delete mem[k]; } };
+    }
+    return new Client(root.G2_CONFIG, { storage: store });
+  }
+
+  function fillContact() {
+    var email = root.G2_CONFIG && root.G2_CONFIG.contactEmail;
+    document.querySelectorAll('[data-contact]').forEach(function (node) {
+      if (email && validEmail(email)) node.replaceChildren(el('a', { href: 'mailto:' + email }, [email]));
+    });
+  }
+
+  function homePage(api) {
+    var forms = document.getElementById('authBox'), off = document.getElementById('notConfigured');
+    if (!api.configured()) { forms.hidden = true; off.hidden = false; return; }
+    if (api.session()) document.getElementById('goApp').hidden = false;
+    var msg = document.getElementById('authMsg');
+    var tabs = { login: document.getElementById('loginForm'), signup: document.getElementById('signupForm'), reset: document.getElementById('resetForm') };
+    function show(name) {
+      Object.keys(tabs).forEach(function (k) { tabs[k].hidden = k !== name; });
+      document.querySelectorAll('[data-tab]').forEach(function (b) { b.classList.toggle('ghost', b.getAttribute('data-tab') !== name); });
+      say(msg, '');
+    }
+    document.querySelectorAll('[data-tab]').forEach(function (b) {
+      b.addEventListener('click', function () { show(b.getAttribute('data-tab')); });
+    });
+    tabs.login.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var f = ev.target, email = f.email.value.trim(), btn = f.querySelector('button');
+      if (!validEmail(email)) return say(msg, 'Please type a valid email address.');
+      busy(btn, true);
+      api.signIn(email, f.password.value).then(function () { root.location.href = 'app.html'; },
+        function (err) { say(msg, err.message); busy(btn, false); });
+    });
+    tabs.signup.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var f = ev.target, email = f.email.value.trim(), btn = f.querySelector('button');
+      if (!validEmail(email)) return say(msg, 'Please type a valid email address.');
+      if (f.password.value.length < 8) return say(msg, 'Your password must be at least 8 characters.');
+      if (f.password.value !== f.password2.value) return say(msg, 'The two passwords are not the same.');
+      if (!f.agree.checked) return say(msg, 'Please agree to the terms and privacy policy.');
+      busy(btn, true);
+      api.signUp(email, f.password.value).then(function (r) {
+        if (r.loggedIn) { root.location.href = 'app.html'; return; }
+        say(msg, 'Almost done! Check your email and click the link to confirm your account.', true);
+        busy(btn, false);
+      }, function (err) { say(msg, err.message); busy(btn, false); });
+    });
+    tabs.reset.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var f = ev.target, email = f.email.value.trim(), btn = f.querySelector('button');
+      if (!validEmail(email)) return say(msg, 'Please type a valid email address.');
+      busy(btn, true);
+      api.resetPassword(email).then(function () {
+        say(msg, 'If that email has an account, a reset link is on its way.', true); busy(btn, false);
+      }, function (err) { say(msg, err.message); busy(btn, false); });
+    });
+    show('signup');
+  }
+
+  function appPage(api) {
+    if (!api.configured() || !api.session()) { root.location.replace('index.html'); return; }
+    var state = { profile: null, children: [], log: [] };
+    var msg = document.getElementById('appMsg');
+    document.getElementById('who').textContent = api.session().user.email;
+
+    function fail(err) {
+      if (err && err.status === 401) { api.clearSession(); root.location.replace('index.html'); return; }
+      say(msg, err && err.message ? err.message : 'Something went wrong.');
+    }
+    function load() {
+      return Promise.all([
+        api.rest('GET', 'profiles?select=id,email,province,time_zone'),
+        api.rest('GET', 'children?select=id,nickname,grade,level,daily_email,created_at&order=created_at'),
+        api.rest('GET', 'email_log?select=child_id,sent_on,status&order=sent_on.desc&limit=30')
+      ]).then(function (r) {
+        state.profile = r[0][0] || null; state.children = r[1] || []; state.log = r[2] || [];
+        render();
+      }, fail);
+    }
+    function patchChild(child, change, note) {
+      say(msg, '');
+      return api.rest('PATCH', 'children?id=eq.' + encodeURIComponent(child.id), change, 'return=minimal')
+        .then(function () { Object.assign(child, change); say(msg, note || 'Saved.', true); render(); }, fail);
+    }
+    function childCard(child) {
+      var ready = READY_GRADES.indexOf(Number(child.grade)) >= 0;
+      var gradeSel = el('select', { 'aria-label': 'Grade' }, options(GRADES, child.grade, function (g) {
+        return gradeLabel(g) + (READY_GRADES.indexOf(Number(g)) >= 0 ? '' : ' (coming soon)');
+      }));
+      gradeSel.addEventListener('change', function () { patchChild(child, { grade: Number(gradeSel.value) }); });
+      var levelSel = el('select', { 'aria-label': 'Level' }, options(LEVELS, child.level));
+      levelSel.addEventListener('change', function () { patchChild(child, { level: levelSel.value }); });
+      var daily = el('input', { type: 'checkbox', checked: !!child.daily_email, disabled: !ready });
+      daily.addEventListener('change', function () {
+        patchChild(child, { daily_email: daily.checked }, daily.checked ? 'Daily email is on.' : 'Daily email is off.');
+      });
+      var remove = el('button', { type: 'button', 'class': 'danger', text: 'Remove' });
+      remove.addEventListener('click', function () {
+        if (!root.confirm('Remove ' + child.nickname + '? This also stops their daily email.')) return;
+        api.rest('DELETE', 'children?id=eq.' + encodeURIComponent(child.id), undefined, 'return=minimal').then(load, fail);
+      });
+      var open = ready ? el('a', { 'class': 'btn ghost', href: worksheetLink(child), target: '_blank', rel: 'noopener' }, ['Open worksheets'])
+        : el('span', { 'class': 'muted small', text: gradeLabel(child.grade) + ' worksheets are coming soon.' });
+      return el('div', { 'class': 'child' }, [
+        el('div', { 'class': 'child-head' }, [el('strong', { text: child.nickname }),
+          el('span', { 'class': 'muted small', text: gradeLabel(child.grade) + ' · ' + LEVELS[child.level] })]),
+        el('div', { 'class': 'row' }, [el('label', {}, ['Grade', gradeSel]), el('label', {}, ['Level', levelSel])]),
+        el('label', { 'class': 'check' }, [daily, 'Email me an 8-page homework PDF every school day']),
+        el('div', { 'class': 'row' }, [open, remove])
+      ]);
+    }
+    function render() {
+      var list = document.getElementById('children');
+      list.replaceChildren.apply(list, state.children.length ? state.children.map(childCard)
+        : [el('p', { 'class': 'muted', text: 'No children yet. Add one below.' })]);
+      document.getElementById('addChild').hidden = state.children.length >= 6;
+
+      var p = state.profile;
+      if (p) {
+        var prov = document.getElementById('province'), tz = document.getElementById('timeZone');
+        prov.replaceChildren.apply(prov, options(PROVINCES, p.province, function (k) { return PROVINCES[k][0]; }));
+        tz.replaceChildren.apply(tz, options(TIME_ZONES, p.time_zone));
+        document.getElementById('sendNote').textContent = 'Daily emails go out at about 4 pm ' + TIME_ZONES[p.time_zone] +
+          ', Monday to Friday. Weekends and ' + PROVINCES[p.province][0] + ' statutory holidays are skipped.';
+      }
+      var byId = {};
+      state.children.forEach(function (c) { byId[c.id] = c.nickname; });
+      var rows = state.log.map(function (l) {
+        return el('tr', {}, [el('td', { text: l.sent_on }), el('td', { text: byId[l.child_id] || '' }),
+          el('td', { text: l.status === 'sent' ? 'Sent' : 'Sending…' })]);
+      });
+      var body = document.getElementById('history');
+      body.replaceChildren.apply(body, rows.length ? rows : [el('tr', {}, [el('td', { colspan: 3, 'class': 'muted', text: 'No emails yet.' })])]);
+    }
+
+    var gradeAdd = document.getElementById('newGrade'), levelAdd = document.getElementById('newLevel');
+    gradeAdd.replaceChildren.apply(gradeAdd, options(GRADES, 2, function (g) {
+      return gradeLabel(g) + (READY_GRADES.indexOf(Number(g)) >= 0 ? '' : ' (coming soon)');
+    }));
+    levelAdd.replaceChildren.apply(levelAdd, options(LEVELS, 'medium'));
+
+    document.getElementById('addChild').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var f = ev.target, name = f.nickname.value.trim(), btn = f.querySelector('button');
+      if (!validNickname(name)) return say(msg, 'Use a first name or nickname (1 to 30 letters, no < > & or quotes).');
+      busy(btn, true);
+      api.rest('POST', 'children', { nickname: name, grade: Number(f.grade.value), level: f.level.value, daily_email: false }, 'return=minimal')
+        .then(function () { f.reset(); say(msg, name + ' was added.', true); return load(); }, fail)
+        .then(function () { busy(btn, false); });
+    });
+    document.getElementById('province').addEventListener('change', function (ev) {
+      var tz = document.getElementById('timeZone');
+      if (has(PROVINCES, ev.target.value)) tz.value = PROVINCES[ev.target.value][1];
+    });
+    document.getElementById('settings').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var change = { province: ev.target.province.value, time_zone: ev.target.timeZone.value };
+      if (!has(PROVINCES, change.province) || !has(TIME_ZONES, change.time_zone)) return;
+      api.rest('PATCH', 'profiles?id=eq.' + encodeURIComponent(api.session().user.id), change, 'return=minimal')
+        .then(function () { Object.assign(state.profile, change); render(); say(msg, 'Settings saved.', true); }, fail);
+    });
+    document.getElementById('logout').addEventListener('click', function () {
+      api.signOut().then(function () { root.location.replace('index.html'); });
+    });
+    document.getElementById('deleteAccount').addEventListener('click', function () {
+      var typed = root.prompt('This deletes your account, your children and all settings. It cannot be undone.\nType DELETE to confirm:');
+      if (typed !== 'DELETE') return;
+      api.rpc('delete_my_account').then(function () { api.clearSession(); root.location.replace('index.html'); }, fail);
+    });
+    api.rpc('is_admin').then(function (yes) { document.getElementById('adminLink').hidden = yes !== true; }, function () {});
+    load();
+  }
+
+  function adminPage(api) {
+    if (!api.configured() || !api.session()) { root.location.replace('index.html'); return; }
+    var msg = document.getElementById('adminMsg');
+    api.rpc('admin_overview').then(function (rows) {
+      rows = rows || [];
+      var sum = function (k) { return rows.reduce(function (t, r) { return t + Number(r[k] || 0); }, 0); };
+      var stats = document.getElementById('stats');
+      stats.replaceChildren(
+        el('div', { 'class': 'stat' }, [el('b', { text: String(rows.length) }), 'parents']),
+        el('div', { 'class': 'stat' }, [el('b', { text: String(sum('children')) }), 'children']),
+        el('div', { 'class': 'stat' }, [el('b', { text: String(sum('daily_emails')) }), 'daily emails on']),
+        el('div', { 'class': 'stat' }, [el('b', { text: String(sum('emails_sent')) }), 'emails sent'])
+      );
+      var day = function (t) { return t ? String(t).slice(0, 10) : '–'; };
+      var body = document.getElementById('users');
+      body.replaceChildren.apply(body, rows.map(function (r) {
+        return el('tr', {}, [el('td', { text: r.email }), el('td', { text: r.province }), el('td', { text: day(r.signed_up) }),
+          el('td', { text: day(r.last_sign_in) }), el('td', { text: String(r.children) }), el('td', { text: String(r.daily_emails) }),
+          el('td', { text: String(r.emails_sent) })]);
+      }));
+    }, function (err) { say(msg, err.message); });
+  }
+
+  // ------------------------------------------------------------------ start
+
+  root.G2 = { Client: Client, AppError: AppError, friendly: friendly, validEmail: validEmail, validNickname: validNickname,
+    worksheetLink: worksheetLink, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES };
+
+  // Refuse to run inside another site's frame (GitHub Pages can't send the header that blocks this).
+  if (root.document && root.top !== root.self) {
+    root.document.documentElement.hidden = true;
+    try { root.top.location = root.self.location.href; } catch (e) { /* blocked: page stays hidden */ }
+    return;
+  }
+
+  if (root.document && root.document.body) {
+    var page = root.document.body.getAttribute('data-page');
+    var api = client();
+    fillContact();
+    if (page === 'home') homePage(api);
+    else if (page === 'app') appPage(api);
+    else if (page === 'admin') adminPage(api);
+  }
+})(typeof window !== 'undefined' ? window : globalThis);

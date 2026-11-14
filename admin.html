@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Admin · Grade 2 Homework</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="admin">
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="index.html">Grade 2 Homework</a>
+    <nav><a href="app.html">My account</a></nav>
+  </header>
+  <section class="card">
+    <h2>Customers</h2>
+    <p class="msg" id="adminMsg" role="status"></p>
+    <div class="stats" id="stats"></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Email</th><th>Province</th><th>Signed up</th><th>Last login</th><th>Children</th><th>Daily on</th><th>Emails sent</th></tr></thead>
+      <tbody id="users"></tbody>
+    </table></div>
+  </section>
+</div>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>My account · Grade 2 Homework</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="app">
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="index.html">Grade 2 Homework</a>
+    <nav><a href="homework.html">Worksheets</a><a href="admin.html" id="adminLink" hidden>Admin</a></nav>
+  </header>
+  <p class="msg" id="appMsg" role="status"></p>
+
+  <div class="grid2">
+    <section class="card">
+      <h2>My children</h2>
+      <div class="list" id="children"><p class="muted">Loading…</p></div>
+      <form id="addChild" class="mt">
+        <h3>Add a child</h3>
+        <label>First name or nickname <input name="nickname" required maxlength="30" autocomplete="off"></label>
+        <div class="row">
+          <label>Grade <select name="grade" id="newGrade"></select></label>
+          <label>Level <select name="level" id="newLevel"></select></label>
+        </div>
+        <button type="submit">Add child</button>
+        <p class="small muted">Only a first name or nickname is needed. Please don't enter a full name or school.</p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Settings</h2>
+      <form id="settings">
+        <label>Province or territory <select name="province" id="province"></select></label>
+        <label>Time zone <select name="timeZone" id="timeZone"></select></label>
+        <button type="submit">Save settings</button>
+      </form>
+      <p class="small muted" id="sendNote"></p>
+
+      <h2 class="mt2">Recent emails</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Date</th><th>Child</th><th>Status</th></tr></thead>
+        <tbody id="history"></tbody>
+      </table></div>
+
+      <h2 class="mt2">Account</h2>
+      <p class="small">Logged in as <b id="who"></b></p>
+      <div class="row">
+        <button type="button" class="ghost" id="logout">Log out</button>
+        <button type="button" class="danger" id="deleteAccount">Delete my account</button>
+      </div>
+    </section>
+  </div>
+
+  <footer class="bottom">
+    <a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span data-contact></span>
+  </footer>
+</div>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Free printable homework for Canadian kids: math, reading, writing and French, plus an optional daily PDF by email.">
+<title>Grade 2 Homework</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="home">
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="index.html">Grade 2 Homework</a>
+    <nav><a href="homework.html">Try the worksheets</a><a href="app.html" id="goApp" hidden>My account</a></nav>
+  </header>
+
+  <section class="hero">
+    <h1>Fresh homework every school day, made for Canadian kids.</h1>
+    <p>Printable worksheets for math, reading, writing &amp; spelling, and French. Turn on the daily email and a new 8-page PDF lands in your inbox after school.</p>
+  </section>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>What you get</h2>
+      <ul class="features">
+        <li>50 questions per subject, at Easy, Medium or Hard level</li>
+        <li>Original reading stories set across Canada</li>
+        <li>Canadian coins, Canadian spelling, and beginner French</li>
+        <li>A new sheet every day, or reprint any sheet by its number</li>
+        <li>Up to 6 children per family, each with their own grade and level</li>
+        <li>Free while we grow. Grade 2 is ready now, and more grades are on the way.</li>
+      </ul>
+      <p class="small muted">No account needed to <a href="homework.html">try the worksheets</a>.</p>
+    </div>
+
+    <div class="card">
+      <p class="notice" id="notConfigured" hidden>Accounts are opening soon. You can already use the worksheets for free.</p>
+      <div id="authBox">
+        <div class="tabs">
+          <button type="button" data-tab="signup">Sign up</button>
+          <button type="button" data-tab="login" class="ghost">Log in</button>
+        </div>
+        <form id="signupForm" novalidate>
+          <label>Email <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label>Password (8 or more characters) <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <label>Password again <input name="password2" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <label class="check"><input name="agree" type="checkbox"> I agree to the <a href="terms.html">terms</a> and <a href="privacy.html">privacy policy</a>.</label>
+          <button type="submit">Create free account</button>
+        </form>
+        <form id="loginForm" novalidate hidden>
+          <label>Email <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label>Password <input name="password" type="password" autocomplete="current-password" required maxlength="72"></label>
+          <button type="submit">Log in</button>
+          <button type="button" class="ghost" data-tab="reset">Forgot password?</button>
+        </form>
+        <form id="resetForm" novalidate hidden>
+          <label>Email <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <button type="submit">Send reset link</button>
+          <button type="button" class="ghost" data-tab="login">Back to log in</button>
+        </form>
+        <p class="msg" id="authMsg" role="status"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bottom">
+    <span>© Grade 2 Homework</span><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><span data-contact></span>
+  </footer>
+</div>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
