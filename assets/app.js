@@ -7,7 +7,11 @@
   var SESSION_KEY = 'g2hw.session';
   var GRADES = { 0: 'Kindergarten', 1: 'Grade 1', 2: 'Grade 2', 3: 'Grade 3', 4: 'Grade 4', 5: 'Grade 5', 6: 'Grade 6',
     7: 'Grade 7', 8: 'Grade 8', 9: 'Grade 9', 10: 'Grade 10', 11: 'Grade 11', 12: 'Grade 12' };
-  var READY_GRADES = [2];  // grades that have worksheets today; more are added over time
+  // Grades with worksheets, per language. Keep in step with homework's hw-core.js and sender/pdf_maker.py (a test checks).
+  var READY = { en: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], fr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
+  var READY_GRADES = READY.en;
+  var QC_GRADES = { 0: 'Maternelle', 1: '1re année', 2: '2e année', 3: '3e année', 4: '4e année', 5: '5e année', 6: '6e année',
+    7: 'Secondaire 1', 8: 'Secondaire 2', 9: 'Secondaire 3', 10: 'Secondaire 4', 11: 'Secondaire 5', 12: 'Grade 12' };
   var LEVELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
   var PROVINCES = {
     AB: ['Alberta', 'America/Edmonton'], BC: ['British Columbia', 'America/Vancouver'], MB: ['Manitoba', 'America/Winnipeg'],
@@ -164,9 +168,16 @@
   function busy(button, on) { if (button) button.disabled = !!on; }
   function validEmail(s) { return /^[^\s@<>,;]+@[^\s@<>,;]+\.[A-Za-z]{2,}$/.test(s) && s.length <= 254; }
   function validNickname(s) { return /^[^<>&"\r\n\t]{1,30}$/.test(s) && s.trim() !== ''; }
-  function gradeLabel(g) { return has(GRADES, g) ? GRADES[g] : 'Grade ' + g; }
-  function worksheetLink(child) {
+  // Quebec families get French worksheets that follow Quebec's school years.
+  function langFor(province) { return province === 'QC' ? 'fr' : 'en'; }
+  function isReady(grade, province) { return READY[langFor(province)].indexOf(Number(grade)) >= 0; }
+  function gradeLabel(g, province) {
+    if (province === 'QC' && has(QC_GRADES, g)) return QC_GRADES[g] + (Number(g) >= 7 && Number(g) <= 11 ? ' (Grade ' + g + ')' : '');
+    return has(GRADES, g) ? GRADES[g] : 'Grade ' + g;
+  }
+  function worksheetLink(child, province) {
     var q = new URLSearchParams({ grade: String(child.grade), level: child.level, subject: 'all' });
+    if (langFor(province) === 'fr') q.set('lang', 'fr');
     return 'homework.html?' + q.toString();
   }
 
@@ -263,9 +274,9 @@
         .then(function () { Object.assign(child, change); say(msg, note || 'Saved.', true); render(); }, fail);
     }
     function childCard(child) {
-      var ready = READY_GRADES.indexOf(Number(child.grade)) >= 0;
+      var prov = state.profile ? state.profile.province : '', ready = isReady(child.grade, prov);
       var gradeSel = el('select', { 'aria-label': 'Grade' }, options(GRADES, child.grade, function (g) {
-        return gradeLabel(g) + (READY_GRADES.indexOf(Number(g)) >= 0 ? '' : ' (coming soon)');
+        return gradeLabel(g, prov) + (isReady(g, prov) ? '' : prov === 'QC' ? ' (not offered in Quebec)' : ' (coming soon)');
       }));
       gradeSel.addEventListener('change', function () { patchChild(child, { grade: Number(gradeSel.value) }); });
       var levelSel = el('select', { 'aria-label': 'Level' }, options(LEVELS, child.level));
@@ -279,11 +290,11 @@
         if (!root.confirm('Remove ' + child.nickname + '? This also stops their daily email.')) return;
         api.rest('DELETE', 'children?id=eq.' + encodeURIComponent(child.id), undefined, 'return=minimal').then(load, fail);
       });
-      var open = ready ? el('a', { 'class': 'btn ghost', href: worksheetLink(child), target: '_blank', rel: 'noopener' }, ['Open worksheets'])
-        : el('span', { 'class': 'muted small', text: gradeLabel(child.grade) + ' worksheets are coming soon.' });
+      var open = ready ? el('a', { 'class': 'btn ghost', href: worksheetLink(child, prov), target: '_blank', rel: 'noopener' }, ['Open worksheets'])
+        : el('span', { 'class': 'muted small', text: gradeLabel(child.grade, prov) + ' worksheets are not available.' });
       return el('div', { 'class': 'child' }, [
         el('div', { 'class': 'child-head' }, [el('strong', { text: child.nickname }),
-          el('span', { 'class': 'muted small', text: gradeLabel(child.grade) + ' · ' + LEVELS[child.level] })]),
+          el('span', { 'class': 'muted small', text: gradeLabel(child.grade, prov) + ' · ' + LEVELS[child.level] + (prov === 'QC' ? ' · en français' : '') })]),
         el('div', { 'class': 'row' }, [el('label', {}, ['Grade', gradeSel]), el('label', {}, ['Level', levelSel])]),
         el('label', { 'class': 'check' }, [daily, 'Email me an 8-page homework PDF every school day']),
         el('div', { 'class': 'row' }, [open, remove])
@@ -294,6 +305,7 @@
       list.replaceChildren.apply(list, state.children.length ? state.children.map(childCard)
         : [el('p', { 'class': 'muted', text: 'No children yet. Add one below.' })]);
       document.getElementById('addChild').hidden = state.children.length >= 6;
+      fillGrades();
 
       var p = state.profile;
       if (p) {
@@ -301,7 +313,8 @@
         prov.replaceChildren.apply(prov, options(PROVINCES, p.province, function (k) { return PROVINCES[k][0]; }));
         tz.replaceChildren.apply(tz, options(TIME_ZONES, p.time_zone));
         document.getElementById('sendNote').textContent = 'Daily emails go out at about 4 pm ' + TIME_ZONES[p.time_zone] +
-          ', Monday to Friday. Weekends and ' + PROVINCES[p.province][0] + ' statutory holidays are skipped.';
+          ', Monday to Friday. Weekends and ' + PROVINCES[p.province][0] + ' statutory holidays are skipped.' +
+          (p.province === 'QC' ? ' Quebec families get worksheets and emails in French.' : '');
       }
       var byId = {};
       state.children.forEach(function (c) { byId[c.id] = c.nickname; });
@@ -314,9 +327,13 @@
     }
 
     var gradeAdd = document.getElementById('newGrade'), levelAdd = document.getElementById('newLevel');
-    gradeAdd.replaceChildren.apply(gradeAdd, options(GRADES, 2, function (g) {
-      return gradeLabel(g) + (READY_GRADES.indexOf(Number(g)) >= 0 ? '' : ' (coming soon)');
-    }));
+    function fillGrades() {
+      var prov = state.profile ? state.profile.province : '', keep = gradeAdd.value || '2';
+      gradeAdd.replaceChildren.apply(gradeAdd, options(GRADES, keep, function (g) {
+        return gradeLabel(g, prov) + (isReady(g, prov) ? '' : prov === 'QC' ? ' (not offered in Quebec)' : ' (coming soon)');
+      }));
+    }
+    fillGrades();
     levelAdd.replaceChildren.apply(levelAdd, options(LEVELS, 'medium'));
 
     document.getElementById('addChild').addEventListener('submit', function (ev) {
@@ -377,7 +394,8 @@
   // ------------------------------------------------------------------ start
 
   root.G2 = { Client: Client, AppError: AppError, friendly: friendly, validEmail: validEmail, validNickname: validNickname,
-    worksheetLink: worksheetLink, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES };
+    worksheetLink: worksheetLink, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES, READY: READY,
+    gradeLabel: gradeLabel, isReady: isReady, langFor: langFor };
 
   // Refuse to run inside another site's frame (GitHub Pages can't send the header that blocks this).
   if (root.document && root.top !== root.self) {

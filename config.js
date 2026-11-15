@@ -4,5 +4,5 @@
 window.G2_CONFIG = {
   supabaseUrl: '',
   supabaseAnonKey: '',
-  contactEmail: ''
+  contactEmail: 'master_jason2016@outlook.com'
 };
