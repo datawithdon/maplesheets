@@ -5,6 +5,8 @@
   'use strict';
 
   var SESSION_KEY = 'g2hw.session';
+  var RESET_KEY = 'g2hw.reset';        // the secret half of a password-reset request (PKCE), kept in this browser only
+  var RESET_MAX_AGE = 3600 * 1000;
   var GRADES = { 0: 'Kindergarten', 1: 'Grade 1', 2: 'Grade 2', 3: 'Grade 3', 4: 'Grade 4', 5: 'Grade 5', 6: 'Grade 6',
     7: 'Grade 7', 8: 'Grade 8', 9: 'Grade 9', 10: 'Grade 10', 11: 'Grade 11', 12: 'Grade 12' };
   // Grades with worksheets, per language. Keep in step with homework's hw-core.js and sender/pdf_maker.py (a test checks).
@@ -29,6 +31,17 @@
   };
 
   function has(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); }
+  var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  function b64url(bytes) {  // base64url without padding
+    var out = '', i, n;
+    for (i = 0; i + 2 < bytes.length; i += 3) {
+      n = bytes[i] << 16 | bytes[i + 1] << 8 | bytes[i + 2];
+      out += B64[n >> 18 & 63] + B64[n >> 12 & 63] + B64[n >> 6 & 63] + B64[n & 63];
+    }
+    if (bytes.length - i === 1) { n = bytes[i] << 16; out += B64[n >> 18 & 63] + B64[n >> 12 & 63]; }
+    if (bytes.length - i === 2) { n = bytes[i] << 16 | bytes[i + 1] << 8; out += B64[n >> 18 & 63] + B64[n >> 12 & 63] + B64[n >> 6 & 63]; }
+    return out;
+  }
 
   // ------------------------------------------------------------------ language
   // French pages (index-fr.html, app-fr.html, …) have <html lang="fr">; every message below has a French version.
@@ -75,6 +88,14 @@
     'This deletes your account, your children and all settings. It cannot be undone.\nType DELETE to confirm:':
       'Cela supprime votre compte, vos enfants et tous les paramètres. C’est irréversible.\nTapez SUPPRIMER pour confirmer :',
     'DELETE': 'SUPPRIMER',
+    'That link has expired or was already used. Please ask for a new one.': 'Ce lien est expiré ou a déjà été utilisé. Demandez-en un nouveau.',
+    'Your email is confirmed. You can log in now.': 'Votre courriel est confirmé. Vous pouvez maintenant vous connecter.',
+    'Checking your link…': 'Vérification du lien…',
+    'Logged in as {email}. Choose a new password.': 'Connecté avec {email}. Choisissez un nouveau mot de passe.',
+    'Please open the reset link in the same browser where you asked for it, or ask for a new link.':
+      'Ouvrez le lien dans le même navigateur que celui où vous l’avez demandé, ou demandez un nouveau lien.',
+    'This browser is too old to reset a password. Please try another browser.': 'Ce navigateur est trop ancien pour changer le mot de passe. Essayez un autre navigateur.',
+    'Please choose a password that is different from your old one.': 'Choisissez un mot de passe différent de l’ancien.',
     'parents': 'parents', 'children': 'enfants', 'daily emails on': 'courriels quotidiens actifs', 'emails sent': 'courriels envoyés'
   };
   function t(text, vars) {
@@ -97,6 +118,7 @@
     if (text.indexOf('invalid login') >= 0) return t('Wrong email or password.');
     if (text.indexOf('already registered') >= 0 || text.indexOf('already been registered') >= 0) return t('That email already has an account. Try logging in.');
     if (text.indexOf('email not confirmed') >= 0) return t('Please confirm your email first. Check your inbox.');
+    if (text.indexOf('different from the old') >= 0) return t('Please choose a password that is different from your old one.');
     if (text.indexOf('password') >= 0 && text.indexOf('characters') >= 0) return t('Your password must be at least 8 characters.');
     if (text.indexOf('up to 6 children') >= 0) return t('You can add up to 6 children.');
     if (text.indexOf('admins only') >= 0) return t('This page is for admins only.');
@@ -114,6 +136,7 @@
     this.fetch = deps.fetch || (root.fetch && root.fetch.bind(root));
     this.store = deps.storage || null;
     this.now = deps.now || function () { return Date.now(); };
+    this.crypto = deps.crypto || root.crypto || null;
   }
   Client.prototype.configured = function () {
     return /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(this.url) && this.key.length > 20;
@@ -158,9 +181,10 @@
       throw new AppError(t('Could not reach the server. Check your internet connection.'));
     });
   };
-  Client.prototype.signUp = function (email, password) {
+  function redirectQuery(redirectTo) { return redirectTo ? '?redirect_to=' + encodeURIComponent(redirectTo) : ''; }
+  Client.prototype.signUp = function (email, password, redirectTo) {
     var self = this;
-    return this.request('POST', '/auth/v1/signup', { email: email, password: password }).then(function (data) {
+    return this.request('POST', '/auth/v1/signup' + redirectQuery(redirectTo), { email: email, password: password }).then(function (data) {
       if (data && data.access_token) { self.saveSession(data); return { loggedIn: true }; }
       return { loggedIn: false };  // email confirmation is switched on in Supabase
     });
@@ -170,8 +194,36 @@
     return this.request('POST', '/auth/v1/token?grant_type=password', { email: email, password: password })
       .then(function (data) { return self.saveSession(data); });
   };
-  Client.prototype.resetPassword = function (email) {
-    return this.request('POST', '/auth/v1/recover', { email: email });
+  // Password reset uses PKCE: a random secret stays in this browser, and only its fingerprint goes to Supabase.
+  // The emailed link brings back a one-time code that only works together with that secret, so a link
+  // made by someone else can't log this browser into their account.
+  Client.prototype.resetPassword = function (email, redirectTo) {
+    var self = this, c = this.crypto, Enc = root.TextEncoder;
+    if (!c || !c.subtle || !c.getRandomValues || !Enc) {
+      return Promise.reject(new AppError(t('This browser is too old to reset a password. Please try another browser.')));
+    }
+    var verifier = b64url(c.getRandomValues(new Uint8Array(32)));
+    return Promise.resolve(c.subtle.digest('SHA-256', new Enc().encode(verifier))).then(function (hash) {
+      try { self.store.setItem(RESET_KEY, JSON.stringify({ v: verifier, at: self.now() })); } catch (e) { /* private window */ }
+      return self.request('POST', '/auth/v1/recover' + redirectQuery(redirectTo),
+        { email: email, code_challenge: b64url(new Uint8Array(hash)), code_challenge_method: 's256' });
+    });
+  };
+  Client.prototype.exchangeResetCode = function (code) {
+    var self = this, saved = null;
+    try { saved = JSON.parse(this.store.getItem(RESET_KEY) || 'null'); } catch (e) { saved = null; }
+    try { this.store.removeItem(RESET_KEY); } catch (e) { /* ignore */ }
+    if (!saved || typeof saved.v !== 'string' || !(this.now() - saved.at < RESET_MAX_AGE)) {
+      return Promise.reject(new AppError(t('Please open the reset link in the same browser where you asked for it, or ask for a new link.')));
+    }
+    return this.request('POST', '/auth/v1/token?grant_type=pkce', { auth_code: code, code_verifier: saved.v })
+      .then(function (data) { return self.saveSession(data); });
+  };
+  Client.prototype.setPassword = function (password) {
+    var self = this;
+    return this.token().then(function (token) {
+      return self.request('PUT', '/auth/v1/user', { password: password }, { token: token });
+    });
   };
   Client.prototype.token = function () {
     var self = this, s = this.session();
@@ -275,7 +327,9 @@
     if (!api.configured()) { forms.hidden = true; off.hidden = false; return; }
     if (api.session()) document.getElementById('goApp').hidden = false;
     var msg = document.getElementById('authMsg');
-    var tabs = { login: document.getElementById('loginForm'), signup: document.getElementById('signupForm'), reset: document.getElementById('resetForm') };
+    var tabs = { login: document.getElementById('loginForm'), signup: document.getElementById('signupForm'), reset: document.getElementById('resetForm'),
+      newpass: document.getElementById('newPassForm') };
+    var here = root.location.protocol === 'https:' ? root.location.origin + root.location.pathname : '';
     function show(name) {
       Object.keys(tabs).forEach(function (k) { tabs[k].hidden = k !== name; });
       document.querySelectorAll('[data-tab]').forEach(function (b) { b.classList.toggle('ghost', b.getAttribute('data-tab') !== name); });
@@ -300,7 +354,7 @@
       if (f.password.value !== f.password2.value) return say(msg, t('The two passwords are not the same.'));
       if (!f.agree.checked) return say(msg, t('Please agree to the terms and privacy policy.'));
       busy(btn, true);
-      api.signUp(email, f.password.value).then(function (r) {
+      api.signUp(email, f.password.value, here).then(function (r) {
         if (r.loggedIn) { root.location.href = pageFor('app.html'); return; }
         say(msg, t('Almost done! Check your email and click the link to confirm your account.'), true);
         busy(btn, false);
@@ -311,11 +365,53 @@
       var f = ev.target, email = f.email.value.trim(), btn = f.querySelector('button');
       if (!validEmail(email)) return say(msg, t('Please type a valid email address.'));
       busy(btn, true);
-      api.resetPassword(email).then(function () {
+      api.resetPassword(email, here).then(function () {
         say(msg, t('If that email has an account, a reset link is on its way.'), true); busy(btn, false);
       }, function (err) { say(msg, err.message); busy(btn, false); });
     });
+    tabs.newpass.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var f = ev.target, btn = f.querySelector('button');
+      if (f.password.value.length < 8) return say(msg, t('Your password must be at least 8 characters.'));
+      if (f.password.value !== f.password2.value) return say(msg, t('The two passwords are not the same.'));
+      busy(btn, true);
+      api.setPassword(f.password.value).then(function () { root.location.href = pageFor('app.html'); },
+        function (err) { say(msg, err.message); busy(btn, false); });
+    });
     show('signup');
+
+    // Coming back from an emailed link (password reset or email confirmation).
+    var land = landing(root.location);
+    if (!land) return;
+    try { root.history.replaceState(null, '', root.location.pathname); } catch (e) { /* ignore */ }  // never leave codes in the address bar
+    if (land.code) {
+      show('newpass');
+      say(msg, t('Checking your link…'), true);
+      api.exchangeResetCode(land.code).then(function (s) {
+        say(msg, t('Logged in as {email}. Choose a new password.', { email: s.user.email }), true);
+      }, function (err) {
+        show('reset');
+        say(msg, err.status ? t('That link has expired or was already used. Please ask for a new one.') : err.message);
+      });
+    } else if (land.confirmed) {
+      show('login');
+      say(msg, t('Your email is confirmed. You can log in now.'), true);
+    } else if (land.error) {
+      show('reset');
+      say(msg, t('That link has expired or was already used. Please ask for a new one.'));
+    }
+  }
+
+  // What an emailed link brought back in the address. Login tokens in the #fragment are never used:
+  // only a PKCE code (which needs this browser's secret) can log someone in.
+  function landing(loc) {
+    var q = new URLSearchParams(loc.search || ''), h = new URLSearchParams(String(loc.hash || '').replace(/^#/, ''));
+    var code = q.get('code');
+    if (code !== null) return /^[A-Za-z0-9-]{8,200}$/.test(code) ? { code: code } : { error: true };
+    if (q.get('error') || h.get('error')) return { error: true };
+    if (h.get('type') === 'signup' || h.get('type') === 'email') return { confirmed: true };
+    if (h.get('access_token')) return { error: true };
+    return null;
   }
 
   function appPage(api) {
@@ -463,7 +559,7 @@
   // ------------------------------------------------------------------ start
 
   root.G2 = { Client: Client, AppError: AppError, friendly: friendly, validEmail: validEmail, validNickname: validNickname,
-    worksheetLink: worksheetLink, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES, READY: READY,
+    worksheetLink: worksheetLink, landing: landing, b64url: b64url, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES, READY: READY,
     gradeLabel: gradeLabel, isReady: isReady, langFor: langFor, t: t, FR: FR, pageFor: pageFor };
 
   // Refuse to run inside another site's frame (GitHub Pages can't send the header that blocks this).

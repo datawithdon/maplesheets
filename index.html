@@ -61,6 +61,11 @@
           <button type="submit">Send reset link</button>
           <button type="button" class="ghost" data-tab="login">Back to log in</button>
         </form>
+        <form id="newPassForm" novalidate hidden>
+          <label>New password (8 or more characters) <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <label>New password again <input name="password2" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <button type="submit">Save new password</button>
+        </form>
         <p class="msg" id="authMsg" role="status"></p>
       </div>
     </div>

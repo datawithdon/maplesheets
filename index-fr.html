@@ -61,6 +61,11 @@
           <button type="submit">Envoyer le lien</button>
           <button type="button" class="ghost" data-tab="login">Retour à la connexion</button>
         </form>
+        <form id="newPassForm" novalidate hidden>
+          <label>Nouveau mot de passe (8 caractères ou plus) <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <label>Confirmer le nouveau mot de passe <input name="password2" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <button type="submit">Enregistrer le mot de passe</button>
+        </form>
         <p class="msg" id="authMsg" role="status"></p>
       </div>
     </div>
