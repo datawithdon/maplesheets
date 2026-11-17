@@ -61,14 +61,14 @@ window.HWLIB.F = function (H) {
   };
   var TYPES = ['Ferme la porte.|impérative', 'Où est mon sac?|interrogative', 'Quelle belle journée!|exclamative', 'Le lac est gelé.|déclarative', 'Viens ici, s’il te plaît.|impérative',
     'As-tu fini tes devoirs?|interrogative', 'Comme il fait froid!|exclamative', 'Les oies partent au sud.|déclarative', 'Range ta chambre.|impérative', 'Qui a gagné?|interrogative'];
-  var CAPS = ['le chat de julie dort sur le sofa', 'nous irons à montréal en juillet', 'mon ami lucas habite à gatineau', 'le fleuve saint-laurent est très long',
-    'en hiver, on patine sur le canal', 'est-ce que tu viens au parc', 'ma tante vit à québec', 'quelle belle surprise', 'samedi, nous visiterons le musée',
-    'le rocher percé est en gaspésie', 'zoé et félix jouent au hockey'];
+  var CAPS = ['le chat de julie dort sur le sofa|Le chat de Julie dort sur le sofa.', 'nous irons à montréal en juillet|Nous irons à Montréal en juillet.', 'mon ami lucas habite à gatineau|Mon ami Lucas habite à Gatineau.', 'le fleuve saint-laurent est très long|Le fleuve Saint-Laurent est très long.',
+    'en hiver, on patine sur le canal|En hiver, on patine sur le canal.', 'est-ce que tu viens au parc|Est-ce que tu viens au parc?', 'ma tante vit à québec|Ma tante vit à Québec.', 'quelle belle surprise|Quelle belle surprise!', 'samedi, nous visiterons le musée|Samedi, nous visiterons le musée.',
+    'le rocher percé est en gaspésie|Le rocher Percé est en Gaspésie.', 'zoé et félix jouent au hockey|Zoé et Félix jouent au hockey.'];
   var PONCT = {
-    4: ['J’ai acheté des pommes des poires et des bananes', 'Léa as-tu vu mon chat', 'Oh non j’ai oublié mon lunch', 'Mon frère qui a dix ans joue au soccer'],
-    7: ['Il pleuvait pourtant nous sommes sortis', 'Elle a dit « Je reviens demain »', 'Voici ma liste du pain du lait et des œufs', 'Quand la cloche sonne les élèves sortent',
-      'Montréal la plus grande ville du Québec est sur une île'],
-    10: ['Les résultats étaient clairs l’expérience avait échoué', 'Il y avait deux choix rester ou partir', 'Selon l’auteur « le savoir est une arme »']
+    4: ['J’ai acheté des pommes des poires et des bananes|J’ai acheté des pommes, des poires et des bananes.', 'Léa as-tu vu mon chat|Léa, as-tu vu mon chat?', 'Oh non j’ai oublié mon lunch|Oh non! J’ai oublié mon lunch.', 'Mon frère qui a dix ans joue au soccer|Mon frère, qui a dix ans, joue au soccer.'],
+    7: ['Il pleuvait pourtant nous sommes sortis|Il pleuvait; pourtant, nous sommes sortis.', 'Elle a dit « Je reviens demain »|Elle a dit : « Je reviens demain. »', 'Voici ma liste du pain du lait et des œufs|Voici ma liste : du pain, du lait et des œufs.', 'Quand la cloche sonne les élèves sortent|Quand la cloche sonne, les élèves sortent.',
+      'Montréal la plus grande ville du Québec est sur une île|Montréal, la plus grande ville du Québec, est sur une île.'],
+    10: ['Les résultats étaient clairs l’expérience avait échoué|Les résultats étaient clairs : l’expérience avait échoué.', 'Il y avait deux choix rester ou partir|Il y avait deux choix : rester ou partir.', 'Selon l’auteur « le savoir est une arme »|Selon l’auteur, « le savoir est une arme ».']
   };
   var FIGURES = {
     5: ['Il est rusé comme un renard.|comparaison|métaphore|hyperbole', 'Le vent chante dans les arbres.|personnification|comparaison|hyperbole',
@@ -104,23 +104,23 @@ window.HWLIB.F = function (H) {
     return function (L) {
       var ortho = bands(ORTHO, g, L), homo = bands(HOMO, g, L), cl = bands(CLASSE, g, L), syn = bands(SYN, g, L), ant = bands(ANT, g, L);
       var k = [
-        function (R) { var p = pick(R, ortho).split('|'); return Q('or:' + p[0], 'Encercle le mot bien écrit :' + circ(shuffle(R, p.map(function (w) { return w.replace('?', ''); })))); },
-        function (R) { var p = pick(R, homo).split('|'); return Q('ho:' + p[0], esc(p[0]).replace('___', BLS) + circ(shuffle(R, p.slice(1)))); },
-        function (R) { var p = pick(R, cl).split('|'); return Q('cl:' + p[1], 'Encercle le <b>' + p[0] + '</b> : ' + p[1].replace(/<u>|<\/u>/g, '') + circ(shuffle(R, p.slice(2)))); },
-        function (R) { var p = pick(R, syn).split('|'); return Q('sy:' + p[0], 'Un synonyme de <b>' + esc(p[0]) + '</b> : ' + BLM); },
-        function (R) { var p = pick(R, ant).split('|'); return Q('an:' + p[0], 'Le contraire de <b>' + esc(p[0]) + '</b> : ' + BLM); },
+        function (R) { var p = pick(R, ortho).split('|'); return Q('or:' + p[0], 'Encercle le mot bien écrit :' + circ(shuffle(R, p.map(function (w) { return w.replace('?', ''); }))), esc(p[0].replace('?', ''))); },
+        function (R) { var p = pick(R, homo).split('|'); return Q('ho:' + p[0], esc(p[0]).replace('___', BLS) + circ(shuffle(R, p.slice(1))), esc(p[1])); },
+        function (R) { var p = pick(R, cl).split('|'); return Q('cl:' + p[1], 'Encercle le <b>' + p[0] + '</b> : ' + p[1].replace(/<u>|<\/u>/g, '') + circ(shuffle(R, p.slice(2))), esc(p[2])); },
+        function (R) { var p = pick(R, syn).split('|'); return Q('sy:' + p[0], 'Un synonyme de <b>' + esc(p[0]) + '</b> : ' + BLM, 'p. ex. ' + esc(p[1])); },
+        function (R) { var p = pick(R, ant).split('|'); return Q('an:' + p[0], 'Le contraire de <b>' + esc(p[0]) + '</b> : ' + BLM, esc(p[1])); },
         W.frVerbs({ verbs: bands(VERBS, g, L), tenses: TENSES[g] || TENSES[11], choice: g <= 6 })
       ];
       if (g <= 6) k.push(W.frGender(g <= 2 ? ['animals', 'food', 'school'] : ['animals', 'food', 'school', 'clothes', 'body', 'house']));
       if (g >= 2 && g <= 7) k.push(H.pairKind(PLUR, function (p) { return 'Écris au pluriel : un ' + esc(p[0]) + ' → des ' + BLM; }, 'pl'));
       if (g >= 2 && g <= 6) k.push(H.pairKind(FEM, function (p) { return 'Écris au féminin : un ' + esc(p[0]) + ' → une ' + BLM; }, 'fe'));
       if (g >= 3) k.push(W.frAgree());
-      if (g <= 6) k.push(function (R) { var p = pick(R, TYPES).split('|'); return Q('ty:' + p[0], esc(p[0]) + circ(['déclarative', 'interrogative', 'exclamative', 'impérative'])); });
+      if (g <= 6) k.push(function (R) { var p = pick(R, TYPES).split('|'); return Q('ty:' + p[0], esc(p[0]) + circ(['déclarative', 'interrogative', 'exclamative', 'impérative']), esc(p[1])); });
       if (g >= 2 && g <= 6) k.push(H.lineKind(CAPS, 'Récris avec les majuscules et la ponctuation :', 'ma'));
-      if (g >= 4) k.push(function (R) { var s = pick(R, bands(PONCT, g, L)); return Q('po:' + s, 'Ajoute la ponctuation : <i>' + esc(s) + '</i>' + BLL); });
+      if (g >= 4) k.push(function (R) { var p = pick(R, bands(PONCT, g, L)).split('|'); return Q('po:' + p[0], 'Ajoute la ponctuation : <i>' + esc(p[0]) + '</i>' + BLL, esc(p[1])); });
       if (g >= 4) k.push(W.frNegate());
-      if (g >= 5) k.push(function (R) { var p = pick(R, bands(FIGURES, g, L)).split('|'); return Q('fi:' + p[0], esc(p[0]) + circ(shuffle(R, p.slice(1)))); });
-      if (g >= 6) k.push(function (R) { var p = pick(R, PP).split('|'); return Q('pp:' + p[0], esc(p[0]).replace('___', BLS) + circ(shuffle(R, p.slice(1)))); });
+      if (g >= 5) k.push(function (R) { var p = pick(R, bands(FIGURES, g, L)).split('|'); return Q('fi:' + p[0], esc(p[0]) + circ(shuffle(R, p.slice(1))), esc(p[1])); });
+      if (g >= 6) k.push(function (R) { var p = pick(R, PP).split('|'); return Q('pp:' + p[0], esc(p[0]).replace('___', BLS) + circ(shuffle(R, p.slice(1))), esc(p[1])); });
       if (g >= 5 && L === 'hard') k.push(W.frVerbs({ verbs: bands(VERBS, g, L), tenses: TENSES[g] || TENSES[11] }));
       return k;
     };

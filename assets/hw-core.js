@@ -8,11 +8,12 @@
 
   var UI = {
     en: {
-      subject: 'Subject', level: 'Level', sheet: 'Sheet #', dateOn: 'Date on sheet', newSheet: 'New sheet', print: 'Print',
+      brand: 'MapleSheets', subject: 'Subject', level: 'Level', sheet: 'Sheet #', dateOn: 'Date on sheet', newSheet: 'New sheet', print: 'Print',
       topics: 'Math topics', all: 'All 4 subjects (8 pages)', allShort: 'All 4 subjects', account: 'My account',
       levels: { easy: 'Easy', medium: 'Medium', hard: 'Hard' }, name: 'Name', date: 'Date', score: 'Score',
       side: function (a, b) { return 'Side ' + a + ' of ' + b; }, sheetNo: 'Sheet #', country: 'Canada',
       readStory: 'Read the story. Then answer the questions.', tf: ['True', 'False'],
+      open: 'Answers will vary', keyTitle: 'Answer key', keyFor: 'For parents', keyBox: 'Answer key (last pages)',
       tips: ['Print on both sides of the paper and choose “flip on long edge”.', 'In the print window, turn off “Headers and footers”.',
         'The same Sheet # always gives the same sheet, so you can print it again later.',
         '“Date on sheet” prints the date in the Date box. For Reading, it also picks that school day’s stories.'],
@@ -27,11 +28,12 @@
       grade: function (g) { return g === '0' ? 'Kindergarten' : 'Grade ' + g; }
     },
     fr: {
-      subject: 'Matière', level: 'Niveau', sheet: 'Feuille no', dateOn: 'Date sur la feuille', newSheet: 'Nouvelle feuille', print: 'Imprimer',
+      brand: 'Feuilles d’érable', subject: 'Matière', level: 'Niveau', sheet: 'Feuille no', dateOn: 'Date sur la feuille', newSheet: 'Nouvelle feuille', print: 'Imprimer',
       topics: 'Thèmes de maths', all: 'Les 4 matières (8 pages)', allShort: 'Les 4 matières', account: 'Mon compte',
       levels: { easy: 'Facile', medium: 'Moyen', hard: 'Difficile' }, name: 'Nom', date: 'Date', score: 'Résultat',
       side: function (a, b) { return 'Côté ' + a + ' de ' + b; }, sheetNo: 'Feuille no\u00a0', country: 'Québec',
       readStory: 'Lis le texte. Ensuite, réponds aux questions.', tf: ['Vrai', 'Faux'],
+      open: 'Réponses variées', keyTitle: 'Corrigé', keyFor: 'Pour les parents', keyBox: 'Corrigé (dernières pages)',
       tips: ['Imprime des deux côtés de la feuille et choisis « retourner sur le bord long ».', 'Dans la fenêtre d’impression, enlève « En-têtes et pieds de page ».',
         'Le même numéro de feuille donne toujours la même feuille.',
         '« Date sur la feuille » écrit la date dans la case Date. En lecture, elle choisit aussi les textes du jour.'],
@@ -96,7 +98,7 @@
   function circ(list) {
     return '<span class="chs">' + list.map(function (c) { return '<span class="ch">' + esc(c) + '</span>'; }).join('') + '</span>';
   }
-  function Q(key, html) { return { key: key, html: html }; }
+  function Q(key, html, ans) { return { key: key, html: html, ans: ans }; }
   function an(word) { return (/^[aeiou]/i.test(word) ? 'an ' : 'a ') + word; }
   function pad2(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -237,7 +239,7 @@
     return function (R) {
       var p = itemOf(pick(R, bank));
       var prompt = p[0].indexOf('___') >= 0 ? esc(p[0]).replace('___', BLS) : esc(p[0]);
-      return Q((tag || 'c') + ':' + p[0], (lead ? lead + ' ' : '') + prompt + circ(shuffle(R, p.slice(1))));
+      return Q((tag || 'c') + ':' + p[0], (lead ? lead + ' ' : '') + prompt + circ(shuffle(R, p.slice(1))), esc(p[1]));
     };
   }
   // blank bank items: "sentence with ___ (hint)|answer" → write the answer on the line
@@ -246,28 +248,29 @@
       var p = itemOf(pick(R, bank));
       var html = esc(p[0]);
       html = html.indexOf('___') >= 0 ? html.replace('___', wide ? BLM : BL) : html + ' ' + (wide ? BLM : BL);
-      return Q((tag || 'b') + ':' + p[0], (lead ? lead + '<br>' : '') + html);
+      return Q((tag || 'b') + ':' + p[0], (lead ? lead + '<br>' : '') + html, esc(p[1]));
     };
   }
-  // rewrite bank items: "sentence to fix" → line underneath
+  // rewrite bank items: "sentence to fix|corrected sentence" → line underneath
   function lineKind(bank, lead, tag) {
     return function (R) {
-      var s = pick(R, bank);
-      return Q((tag || 'l') + ':' + s, lead + ' <i>' + esc(s) + '</i>' + BLL);
+      var p = itemOf(pick(R, bank));
+      return Q((tag || 'l') + ':' + p[0], lead + ' <i>' + esc(p[0]) + '</i>' + BLL, p[1] ? esc(p[1]) : UI[lang].open);
     };
   }
-  // pair bank items: "a|b" → template(a) and a line, e.g. synonyms or past tense
+  // pair bank items: "a|b" → template(a) and a line, e.g. synonyms or past tense.
+  // make() returns the question html (the answer is then b), or { html, ans }.
   function pairKind(bank, make, tag) {
     return function (R) {
-      var p = itemOf(pick(R, bank));
-      return Q((tag || 'p') + ':' + p[0], make(p, R));
+      var p = itemOf(pick(R, bank)), m = make(p, R);
+      return typeof m === 'string' ? Q((tag || 'p') + ':' + p[0], m, esc(p[1])) : Q((tag || 'p') + ':' + p[0], m.html, m.ans);
     };
   }
   // circle-the-odd-one-out style: "a|b|c|d" where the first word is the answer
   function oddKind(bank, lead, tag) {
     return function (R) {
       var p = itemOf(pick(R, bank));
-      return Q((tag || 'o') + ':' + p[0], lead + circ(shuffle(R, p)));
+      return Q((tag || 'o') + ':' + p[0], lead + circ(shuffle(R, p)), esc(p[0]));
     };
   }
 
@@ -276,7 +279,7 @@
     circ: circ, Q: Q, an: an, pad2: pad2, svg: svg, coinsSvg: coinsSvg, clockSvg: clockSvg, groupsSvg: groupsSvg, fracSvg: fracSvg,
     patternSvg: patternSvg, shapeAt: shapeAt, tx: tx, num: num, money: money, cap: cap, ucFirstHtml: ucFirstHtml, itemOf: itemOf, lim: lim,
     choiceKind: choiceKind, blankKind: blankKind, lineKind: lineKind, pairKind: pairKind, oddKind: oddKind,
-    lang: function () { return lang; }, ui: function () { return UI[lang]; }
+    lang: function () { return lang; }, ui: function () { return UI[lang]; }, open: function () { return UI[lang].open; }
   };
   var HW = window.HW = { H: H, AVAILABLE: AVAILABLE };
 
@@ -311,9 +314,10 @@
     return w * 5 + (days - 7 * w);
   }
   function storyList(subj, L) { return Array.isArray(subj.stories) ? subj.stories : subj.stories[L]; }
-  function pickStories(subj, L, date, R, key) {
+  function pickStories(subj, L, date, R, key, start) {
     var list = storyList(subj, L), n = list.length;
     if (n < 2) throw new Error('not enough stories');
+    if (start !== null && start !== undefined) return [list[start % n], list[(start + 1) % n]];  // ?story=N: reprint a chosen story
     if (date) {
       var idx = [];
       for (var i = 0; i < n; i++) idx.push(i);
@@ -342,6 +346,14 @@
     if (p[0] === 'W') return esc(p[1]) + BLL;  // short written answer
     throw new Error('unknown story question type');
   }
+  function storyAnswer(code) {
+    var p = code.split('|');
+    if (p[0] === 'T' || p[0] === 'V') return UI[lang].tf[0];
+    if (p[0] === 'F') return UI[lang].tf[1];
+    if (p[0] === 'C') return esc(p.slice(2).filter(function (c) { return /\*$/.test(c); })[0].replace(/\*$/, ''));
+    if (p[0] === 'B') return esc(p[2]);
+    return UI[lang].open;
+  }
   function storySide(subj, story, side, R, L) {
     var paras = story.text.split('\n').map(function (t) { return '<p>' + esc(t) + '</p>'; }).join('');
     var asChoices = !!subj.easyChoices && L === 'easy';
@@ -365,7 +377,7 @@
   }
   function pageHtml(subj, st, side, body) {
     var u = UI[lang];
-    var footer = [u.grade(st.grade) + ' · ' + u.country, subj.name, u.levels[st.level], u.sheetNo + st.seed];
+    var footer = [u.brand, u.grade(st.grade) + ' · ' + u.country, subj.name, u.levels[st.level], u.sheetNo + st.seed];
     if (st.date) footer.push(isoDate(st.date));
     if (subj.topics) footer.push(subj.topics.filter(function (t) { return st.topics.indexOf(t.id) >= 0; }).map(function (t) { return t.name; }).join(', '));
     var dateHtml = st.date ? '<b class="dt">' + esc(longDate(st.date)) + '</b>' : '<span class="ln dl"></span>';
@@ -377,25 +389,43 @@
       '<div class="body ' + subj.css + ' ' + st.level + ' g' + st.grade + (PACK && PACK.id === 'en-2' ? ' legacy' : '') + '">' + body + '</div>' +
       '<footer class="ft">' + esc(footer.join(' · ')) + '</footer></section>';
   }
+  function keyPages(st, keys) {
+    var u = UI[lang], html = '';
+    for (var i = 0; i < keys.length; i += 2) {
+      var blocks = keys.slice(i, i + 2).map(function (k) {
+        return '<div class="key-block"><h2>' + esc(k.name) + '</h2><ol class="key-list">' +
+          k.answers.map(function (a) { return '<li>' + (a === undefined || a === '' ? '—' : a) + '</li>'; }).join('') + '</ol></div>';
+      }).join('');
+      html += '<section class="page key"><header class="hd"><div class="hd1"><h1>' + esc(u.keyTitle) + '</h1><span class="tag">' + esc(u.levels[st.level]) +
+        '</span><span class="side">' + esc(u.keyFor) + '</span></div></header><div class="body keybody">' + blocks + '</div>' +
+        '<footer class="ft">' + esc([u.brand, u.grade(st.grade) + ' · ' + u.country, u.levels[st.level], u.sheetNo + st.seed].concat(st.date ? [isoDate(st.date)] : []).join(' · ')) +
+        '</footer></section>';
+    }
+    return html;
+  }
   function buildSheet(pack, st) {
     var subjects = st.subject === 'all' ? pack.subjects : pack.subjects.filter(function (s) { return s.id === st.subject; }), html = '';
     var legacy = pack.id === 'en-2';  // keeps every Grade 2 sheet number exactly as it was before other grades existed
+    var keys = [];
     subjects.forEach(function (s) {
       var topicsKey = s.topics ? st.topics.join(',') : '-';
       var R = mulberry32(fnv1a(st.seed + '|' + s.id + '|' + st.level + '|' + topicsKey + (legacy ? '' : '|' + pack.id)));
       var sides;
       if (s.stories) {
         var key = st.level + (legacy ? '' : '|' + pack.id);
-        sides = pickStories(s, st.level, st.date, R, key).map(function (story, i) { return storySide(s, story, i, R, st.level); });
+        var two = pickStories(s, st.level, st.date, R, key, st.story);
+        sides = two.map(function (story, i) { return storySide(s, story, i, R, st.level); });
+        keys.push({ name: s.name, answers: two[0].q.concat(two[1].q).map(storyAnswer) });
       } else {
         var groups = s.topics ? s.topics.filter(function (t) { return st.topics.indexOf(t.id) >= 0; }).map(function (t) { return t.kinds(st.level); })
           : [s.kinds(st.level)];
         var qs = fillQuestions(groups, st.level, R);
         sides = [gridSide(qs.slice(0, PER_SIDE), 0), gridSide(qs.slice(PER_SIDE), 1)];
+        keys.push({ name: s.name, answers: qs.map(function (q) { return q.ans; }) });
       }
       sides.forEach(function (body, i) { html += pageHtml(s, st, i, body); });
     });
-    return html;
+    return st.key ? html + keyPages(st, keys) : html;
   }
   function countOverflow(root) {
     var n = 0;
@@ -435,7 +465,8 @@
     var p = params(), ids = pack.subjects.map(function (s) { return s.id; }).concat(['all']);
     var topicSubj = pack.subjects.filter(function (s) { return s.topics; })[0];
     var topicIds = topicSubj ? topicSubj.topics.map(function (t) { return t.id; }) : [];
-    st.subject = pack.subjects[0].id; st.level = 'medium'; st.seed = null; st.date = null; st.topics = topicIds.slice();
+    st.subject = pack.subjects[0].id; st.level = 'medium'; st.seed = null; st.date = null; st.topics = topicIds.slice(); st.key = p.get('key') !== '0';
+    v = p.get('story'); st.story = v !== null && /^[0-9]{1,3}$/.test(v) ? Number(v) : null;
     var v = p.get('subject'); if (v !== null && ids.indexOf(v) >= 0) st.subject = v;
     v = p.get('level'); if (v !== null && LEVEL_IDS.indexOf(v) >= 0) st.level = v;
     st.seed = parseSeed(p.get('seed'));
@@ -475,7 +506,8 @@
     document.title = PACK.title;
     $('title').textContent = PACK.title;
     $('account').textContent = u.account;
-    [['lblSubject', 'subject'], ['lblLevel', 'level'], ['lblSeed', 'sheet'], ['lblDate', 'dateOn'], ['newSheet', 'newSheet'], ['print', 'print'], ['topicsLegend', 'topics']]
+    $('account').href = lang === 'fr' ? 'app-fr.html' : 'app.html';
+    [['lblSubject', 'subject'], ['lblLevel', 'level'], ['lblSeed', 'sheet'], ['lblDate', 'dateOn'], ['newSheet', 'newSheet'], ['print', 'print'], ['topicsLegend', 'topics'], ['lblKey', 'keyBox']]
       .forEach(function (x) { $(x[0]).textContent = u[x[1]]; });
     var subj = $('subject');
     subj.replaceChildren.apply(subj, PACK.subjects.map(function (s) { return opt(s.id, s.name); }).concat([opt('all', u.all)]));
@@ -499,6 +531,7 @@
     $('level').value = state.level;
     $('seed').value = String(state.seed);
     $('date').value = state.date ? isoDate(state.date) : '';
+    $('key').checked = !!state.key;
     topicBoxes().forEach(function (b) { b.checked = state.topics.indexOf(b.value) >= 0; });
     $('topicsBox').hidden = !(hasTopics() && (state.subject === 'all' || (topicSubj && state.subject === topicSubj.id)));
   }
@@ -509,6 +542,7 @@
     q.set('subject', state.subject); q.set('level', state.level); q.set('seed', String(state.seed));
     if (hasTopics()) q.set('topics', state.topics.join(','));
     if (state.date) q.set('date', isoDate(state.date));
+    if (!state.key) q.set('key', '0');
     try { window.history.replaceState(null, '', '?' + q.toString()); } catch (e) { /* some browsers block this for local files */ }
   }
   function render() {
@@ -531,6 +565,7 @@
     var ids = PACK.subjects.map(function (s) { return s.id; }).concat(['all']);
     if (ids.indexOf($('subject').value) >= 0) state.subject = $('subject').value;
     if (LEVEL_IDS.indexOf($('level').value) >= 0) state.level = $('level').value;
+    state.key = $('key').checked;
     var seed = parseSeed($('seed').value.trim());
     if (seed === null) { say(u.badSeed); return; }
     state.seed = seed;
@@ -549,7 +584,7 @@
   function start() {
     buildControls();
     readUrl(PACK, state);
-    ['subject', 'level', 'seed', 'date'].forEach(function (id) { $(id).addEventListener('change', onChange); });
+    ['subject', 'level', 'seed', 'date', 'key'].forEach(function (id) { $(id).addEventListener('change', onChange); });
     $('newSheet').addEventListener('click', function () { $('seed').value = String(randomSeed()); onChange(); });
     $('print').addEventListener('click', function () { window.print(); });
     $('controls').hidden = false;
@@ -565,7 +600,7 @@
       Object.keys(libs).forEach(function (k) { if (!has(H, k)) H[k] = libs[k](H); });
       var pack = make(H);
       pack.id = id;
-      pack.title = pack.title || (lang === 'fr' ? 'Devoirs · ' : '') + UI[lang].grade(state.grade) + (lang === 'fr' ? '' : ' Homework');
+      pack.title = pack.title || UI[lang].brand + ' · ' + UI[lang].grade(state.grade);
       pack.subjects.forEach(function (s) { s.css = s.css || (s.stories ? 'reading' : s.id); });
       PACK = pack;
     } catch (e) {

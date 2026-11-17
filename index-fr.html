@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="Devoirs gratuits à imprimer pour les enfants du Canada, de la maternelle à la fin du secondaire, et un PDF quotidien par courriel.">
+<title>Feuilles d’érable</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="home">
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="index-fr.html">Feuilles d’érable</a>
+    <nav><a href="homework.html?lang=fr">Essayer les feuilles</a><a href="app-fr.html" id="goApp" hidden>Mon compte</a><a href="index.html" lang="en">English</a></nav>
+  </header>
+
+  <section class="hero">
+    <h1>Des devoirs frais chaque jour d’école, faits pour les enfants d’ici.</h1>
+    <p>Des feuilles à imprimer de la maternelle à la fin du secondaire : mathématiques, lecture, français et langue seconde. Activez le courriel quotidien et un nouveau PDF de 8 pages arrive dans votre boîte après l’école.</p>
+  </section>
+
+  <div class="grid2">
+    <div class="card">
+      <h2>Ce que vous obtenez</h2>
+      <ul class="features">
+        <li>50 questions par matière, au niveau Facile, Moyen ou Difficile</li>
+        <li>Des textes de lecture originaux qui se passent partout au Canada</li>
+        <li>Un corrigé pour les parents à la fin de chaque PDF</li>
+        <li>Au Québec, tout est en français, de la maternelle à la 5e secondaire, avec l’anglais comme langue seconde</li>
+        <li>Une nouvelle feuille chaque jour, ou réimprimez une feuille avec son numéro</li>
+        <li>Jusqu’à 6 enfants par famille, chacun avec son année et son niveau</li>
+        <li>Gratuit pendant notre lancement</li>
+      </ul>
+      <p class="small muted">Pas besoin de compte pour <a href="homework.html?lang=fr">essayer les feuilles</a>.</p>
+    </div>
+
+    <div class="card">
+      <p class="notice" id="notConfigured" hidden>Les comptes ouvrent bientôt. Vous pouvez déjà utiliser les feuilles gratuitement.</p>
+      <div id="authBox">
+        <div class="tabs">
+          <button type="button" data-tab="signup">S’inscrire</button>
+          <button type="button" data-tab="login" class="ghost">Se connecter</button>
+        </div>
+        <form id="signupForm" novalidate>
+          <label>Courriel <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label>Mot de passe (8 caractères ou plus) <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <label>Confirmer le mot de passe <input name="password2" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
+          <label class="check"><input name="agree" type="checkbox"> J’accepte les <a href="terms-fr.html">conditions</a> et la <a href="privacy-fr.html">politique de confidentialité</a>.</label>
+          <button type="submit">Créer un compte gratuit</button>
+        </form>
+        <form id="loginForm" novalidate hidden>
+          <label>Courriel <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label>Mot de passe <input name="password" type="password" autocomplete="current-password" required maxlength="72"></label>
+          <button type="submit">Se connecter</button>
+          <button type="button" class="ghost" data-tab="reset">Mot de passe oublié?</button>
+        </form>
+        <form id="resetForm" novalidate hidden>
+          <label>Courriel <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <button type="submit">Envoyer le lien</button>
+          <button type="button" class="ghost" data-tab="login">Retour à la connexion</button>
+        </form>
+        <p class="msg" id="authMsg" role="status"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bottom">
+    <span>© Feuilles d’érable (MapleSheets)</span><a href="privacy-fr.html">Confidentialité</a><a href="terms-fr.html">Conditions</a><span data-contact></span>
+  </footer>
+</div>
+<script src="config.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

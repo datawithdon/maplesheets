@@ -18,24 +18,24 @@ window.HWLIB.C = function (H) {
       var k = pick(R, SHAPES), n = ri(R, 1, L === 'easy' ? 5 : 7), others = sample(R, SHAPES.filter(function (x) { return x !== k; }), 2), list = [];
       for (var i = 0; i < n; i++) list.push(k);
       var extra = ri(R, 1, 2); for (var j = 0; j < extra; j++) list.push(pick(R, others));
-      return Q('cs:' + k + n + ':' + extra, T('How many', 'Combien de') + ' <b>' + sName(k, true) + '</b>? ' + BLS + '<br>' + shapeRow(shuffle(R, list)));
+      return Q('cs:' + k + n + ':' + extra, T('How many', 'Combien de') + ' <b>' + sName(k, true) + '</b>? ' + BLS + '<br>' + shapeRow(shuffle(R, list)), String(n));
     },
     circleNum: function (R, L) {
       var max = L === 'easy' ? 10 : 20, n = ri(R, 0, max), pool = [];
       for (var i = 0; i <= max; i++) if (i !== n) pool.push(i);
-      return Q('cn:' + n, T('Circle the number', 'Encercle le nombre') + ' ' + big(n) + circ(shuffle(R, sample(R, pool, 3).concat([n]))));
+      return Q('cn:' + n, T('Circle the number', 'Encercle le nombre') + ' ' + big(n) + circ(shuffle(R, sample(R, pool, 3).concat([n]))), String(n));
     },
     writeNum: function (R, L) {
       var n = ri(R, 0, L === 'hard' ? 20 : 10);
-      return Q('wn:' + n, T('Write the number', 'Écris le nombre') + ' ' + big(n) + T(' two times: ', ' deux fois : ') + BLS + ' ' + BLS);
+      return Q('wn:' + n, T('Write the number', 'Écris le nombre') + ' ' + big(n) + T(' two times: ', ' deux fois : ') + BLS + ' ' + BLS, n + ' ' + n);
     },
     addDots: function (R, L) {
       var a = ri(R, 1, L === 'hard' ? 5 : 3), b = ri(R, 1, L === 'hard' ? 5 : 3);
-      return Q('ad:' + a + '+' + b, '<div class="row">' + H.groupsSvg(1, a) + ' <b>+</b> ' + H.groupsSvg(1, b) + '<span>&nbsp;= ' + BLS + '</span></div>');
+      return Q('ad:' + a + '+' + b, '<div class="row">' + H.groupsSvg(1, a) + ' <b>+</b> ' + H.groupsSvg(1, b) + '<span>&nbsp;= ' + BLS + '</span></div>', String(a + b));
     },
     whichShape: function (R) {
       var k = pick(R, ['circle', 'square', 'triangle', 'star']), opts = shuffle(R, sample(R, SHAPES.filter(function (x) { return x !== k; }), 2).concat([k]));
-      return Q('ws:' + k + opts.join(), (fr ? (k === 'star' ? 'Encercle l’' : 'Encercle le ') : 'Circle the ') + '<b>' + sName(k) + '</b>.<br>' + shapeRow(opts));
+      return Q('ws:' + k + opts.join(), (fr ? (k === 'star' ? 'Encercle l’' : 'Encercle le ') : 'Circle the ') + '<b>' + sName(k) + '</b>.<br>' + shapeRow(opts), sName(k));
     }
   };
 
@@ -53,7 +53,7 @@ window.HWLIB.C = function (H) {
       ['money', 'Money & time', 'Argent et heure', { easy: [M.coins({ kinds: [5, 10], n: 4, cap: 40 }), M.clock([0, 30]), M.calendar()], medium: [M.coins({ kinds: [5, 10, 25], n: 5, cap: 100 }), M.clock([0, 15, 30, 45]), M.calendar()], hard: [M.coins({ kinds: [5, 10, 25, 100, 200], n: 6, cap: 500 }), M.change({ paid: [100] }), M.clock([0, 15, 30, 45]), M.calendar()] }],
       ['groups', 'Groups, fractions & patterns', 'Groupes, fractions et suites', { easy: [M.eqGroups([4, 5]), M.fracShade([2, 3, 4]), M.shapePattern(['AB', 'AAB', 'ABB']), M.numPattern({ steps: [1, 2, 5], max: 20 })], medium: [M.eqGroups([4, 5]), M.word({ kinds: ['groups', 'share'], f: 5 }), M.fracShade([2, 3, 4]), M.shapePattern(['AB', 'AAB', 'ABB', 'ABC']), M.numPattern({ steps: [2, 3, 5, 10], max: 50 })], hard: [M.eqGroups([4, 6]), M.word({ kinds: ['groups', 'share'], f: 6 }), M.fracShade([2, 3, 4, 6, 8]), M.shapePattern(['AB', 'AAB', 'ABB', 'ABC', 'AABB', 'ABCB']), M.numPattern({ steps: [2, 3, 4, 5, 10, 25], max: 100, rule: true, down: true })] }]],
     3: [['add', 'Add & subtract', 'Additions et soustractions', { easy: [M.arith({ ops: '+-', a: [10, 99], b: [10, 99] }), M.arith({ ops: '+-', a: [100, 499], b: [10, 99], vertical: true }), M.missing({ ops: '+-', max: 100 }), M.word({ kinds: ['join', 'take', 'compare'], max: 100 })], medium: [M.arith({ ops: '+-', a: [100, 999], b: [10, 99] }), M.arith({ ops: '+-', a: [100, 999], b: [100, 999], vertical: true }), M.missing({ ops: '+-', max: 500 }), M.word({ kinds: ['join', 'take', 'compare'], max: 500 })], hard: [M.arith({ ops: '+-', a: [100, 999], b: [100, 999] }), M.arith({ ops: '+-', a: [100, 999], b: [100, 999], vertical: true }), M.missing({ ops: '+-', max: 1000 }), M.word({ kinds: ['join', 'take', 'compare', 'multi'], max: 1000 })] }],
-      ['mult', 'Multiply & divide', 'Multiplications et divisions', { easy: [M.arith({ ops: 'x', a: [1, 5], b: [1, 5] }), M.eqGroups([4, 5]), M.arith({ ops: '/', b: [2, 5], q: [1, 5] }), M.word({ kinds: ['groups', 'share'], f: 5 })], medium: [M.arith({ ops: 'x', a: [2, 7], b: [2, 7] }), M.eqGroups([5, 6]), M.arith({ ops: '/', b: [2, 7], q: [2, 7] }), M.missing({ ops: 'x/', f: 7 }), M.word({ kinds: ['groups', 'share'], f: 7 })], hard: [M.arith({ ops: 'x', a: [2, 10], b: [2, 10] }), M.arith({ ops: '/', b: [2, 10], q: [2, 10] }), M.missing({ ops: 'x/', f: 10 }), M.word({ kinds: ['groups', 'share', 'rate'], f: 10 })] }],
+      ['mult', 'Multiply & divide', 'Multiplications et divisions', { easy: [M.arith({ ops: 'x', a: [1, 5], b: [1, 5] }), M.eqGroups([4, 5]), M.arith({ ops: '/', b: [2, 5], q: [1, 5] }), M.word({ kinds: ['groups', 'share'], f: 5 })], medium: [M.arith({ ops: 'x', a: [2, 7], b: [2, 7] }), M.eqGroups([4, 6]), M.arith({ ops: '/', b: [2, 7], q: [2, 7] }), M.missing({ ops: 'x/', f: 7 }), M.word({ kinds: ['groups', 'share'], f: 7 })], hard: [M.arith({ ops: 'x', a: [2, 10], b: [2, 10] }), M.arith({ ops: '/', b: [2, 10], q: [2, 10] }), M.missing({ ops: 'x/', f: 10 }), M.word({ kinds: ['groups', 'share', 'rate'], f: 10 })] }],
       ['num', 'Numbers to 1000', 'Nombres jusqu’à 1000', { easy: [M.placeValue({ digits: 3 }), M.compare({ max: 500 }), M.skip({ steps: [2, 5, 10], max: 200 }), M.rounding({ to: [10], min: 11, max: 99 }), M.evenOdd(200)], medium: [M.placeValue({ digits: 3 }), M.compare({ max: 1000 }), M.skip({ steps: [5, 10, 25, 100], max: 1000, back: true }), M.rounding({ to: [10, 100], min: 101, max: 999 }), M.order({ max: 999, k: 4 }), M.evenOdd(1000)], hard: [M.placeValue({ digits: 4 }), M.compare({ max: 9999 }), M.skip({ steps: [5, 10, 25, 100], max: 1000, back: true }), M.rounding({ to: [10, 100], min: 101, max: 999 }), M.order({ max: 9999, k: 4, desc: true }), M.numPattern({ steps: [3, 4, 6, 25], max: 500, down: true, rule: true })] }],
       ['frac', 'Fractions & money', 'Fractions et argent', { easy: [M.fracShade([2, 3, 4]), M.coins({ kinds: [5, 10, 25], n: 5, cap: 100 }), M.change({ paid: [100, 200] })], medium: [M.fracShade([2, 3, 4, 6, 8]), M.compare({ frac: 8 }), M.coins({ kinds: [5, 10, 25, 100, 200], n: 6, cap: 500 }), M.change({ paid: [500, 1000] })], hard: [M.fracShade([3, 4, 5, 6, 8, 10]), M.compare({ frac: 10 }), M.coins({ kinds: [5, 10, 25, 100, 200], n: 7, cap: 1000 }), M.change({ paid: [500, 1000, 2000] }), M.word({ kinds: ['money'], dollars: 10 })] }],
       ['meas', 'Time, shapes & measuring', 'Heure, formes et mesure', { easy: [M.clock([0, 15, 30, 45]), M.calendar(), M.shapes({ kinds: ['sides', 'name'] }), M.geo({ kinds: ['perim'], max: 9 })], medium: [M.clock([5, 10, 20, 25, 35, 40, 50, 55]), M.elapsed([15, 30, 45, 60]), M.shapes({ kinds: ['sides', 'name', 'solid'] }), M.geo({ kinds: ['perim', 'area'], max: 10 }), M.units({ max: 9 })], hard: [M.clock([5, 10, 20, 25, 35, 40, 50, 55]), M.elapsed([20, 35, 45, 50, 75, 90]), M.shapes({ kinds: ['sides', 'name', 'solid'] }), M.geo({ kinds: ['perim', 'area'], max: 12 }), M.units({ max: 20 })] }]],

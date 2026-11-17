@@ -50,15 +50,15 @@ window.HWLIB.E = function (H) {
       'helping verb|We <u>have</u> <u>finished</u> the <u>project</u>.|have|finished|project', 'relative pronoun|The book <u>that</u> I <u>read</u> was <u>long</u>.|that|read|long']
   };
   var PUNCT = {
-    4: ['we need eggs flour and sugar', 'mr ito lives in kelowna british columbia', 'on july 1 2026 we watched fireworks', 'wow what a great goal', 'yes i can come to your party',
-      'the dogs bowl is empty', 'my brothers bike is red', 'can you help me carry this', 'dear grandma thank you for the gift'],
-    6: ['“Where are you going” asked Mom.', 'Ella said “I love this song”', 'the students projects were on display', 'its time to go said the coach',
-      'however we decided to stay home', 'after the game we went for pizza', 'my aunt who lives in Moncton is a nurse', 'Ottawa Ontario is Canada’s capital'],
-    8: ['I have three goals learn French run a 5K and read more', 'The weather was cold nevertheless we went skating', 'She packed the following a map a flashlight and water',
-      'My favourite cities are Victoria BC Halifax NS and Quebec City QC', 'The movie which was long was worth it', 'It was late we went home',
-      'Its tail wagged its happy to see you'],
-    10: ['The committee’s decision—though unpopular—was final', 'There are two options stay or leave', 'The author writes “Hope is the thing with feathers”',
-      'She checked the stove locked the door and left', 'The results were clear the experiment had failed', 'Whose idea was it the teachers or the students']
+    4: ['we need eggs flour and sugar|We need eggs, flour and sugar.', 'mr ito lives in kelowna british columbia|Mr. Ito lives in Kelowna, British Columbia.', 'on july 1 2026 we watched fireworks|On July 1, 2026, we watched fireworks.', 'wow what a great goal|Wow, what a great goal!', 'yes i can come to your party|Yes, I can come to your party.',
+      'the dogs bowl is empty|The dog’s bowl is empty.', 'my brothers bike is red|My brother’s bike is red.', 'can you help me carry this|Can you help me carry this?', 'dear grandma thank you for the gift|Dear Grandma, thank you for the gift.'],
+    6: ['“Where are you going” asked Mom.|“Where are you going?” asked Mom.', 'Ella said “I love this song”|Ella said, “I love this song.”', 'the students projects were on display|The students’ projects were on display.', 'its time to go said the coach|“It’s time to go,” said the coach.',
+      'however we decided to stay home|However, we decided to stay home.', 'after the game we went for pizza|After the game, we went for pizza.', 'my aunt who lives in Moncton is a nurse|My aunt, who lives in Moncton, is a nurse.', 'Ottawa Ontario is Canada’s capital|Ottawa, Ontario, is Canada’s capital.'],
+    8: ['I have three goals learn French run a 5K and read more|I have three goals: learn French, run a 5K and read more.', 'The weather was cold nevertheless we went skating|The weather was cold; nevertheless, we went skating.', 'She packed the following a map a flashlight and water|She packed the following: a map, a flashlight and water.',
+      'My favourite cities are Victoria BC Halifax NS and Quebec City QC|My favourite cities are Victoria, BC; Halifax, NS; and Quebec City, QC.', 'The movie which was long was worth it|The movie, which was long, was worth it.', 'It was late we went home|It was late; we went home.',
+      'Its tail wagged its happy to see you|Its tail wagged; it’s happy to see you.'],
+    10: ['The committee’s decision—though unpopular—was final|The committee’s decision—though unpopular—was final.', 'There are two options stay or leave|There are two options: stay or leave.', 'The author writes “Hope is the thing with feathers”|The author writes, “Hope is the thing with feathers.”',
+      'She checked the stove locked the door and left|She checked the stove, locked the door and left.', 'The results were clear the experiment had failed|The results were clear: the experiment had failed.', 'Whose idea was it the teachers or the students|Whose idea was it: the teacher’s or the students’?']
   };
   var SENT_TYPE = ['Close the door, please.|imperative', 'Where is the library?|interrogative', 'What a beautiful sunset!|exclamatory', 'The lake froze last night.|declarative',
     'Please pass the salt.|imperative', 'Did you finish your homework?|interrogative', 'I can’t believe we won!|exclamatory', 'Canada has ten provinces.|declarative',
@@ -117,13 +117,13 @@ window.HWLIB.E = function (H) {
   var VOICE = ['The ball was thrown by Ali.|passive', 'Ali threw the ball.|active', 'The cake was baked by Grandma.|passive', 'Grandma baked the cake.|active',
     'The window was broken.|passive', 'The storm broke the window.|active', 'The novel was written in 1908.|passive', 'Lucy Maud Montgomery wrote the novel.|active',
     'The vote was counted by volunteers.|passive', 'Volunteers counted the vote.|active', 'Mistakes were made.|passive', 'The committee approved the plan.|active'];
-  var TO_ACTIVE = ['The game was won by our team.', 'The letter was written by Priya.', 'The trees were planted by the students.', 'The song was sung by the choir.',
-    'The bridge was built by engineers.', 'The meal was cooked by my uncle.', 'The race was won by a rookie.', 'The mural was painted by local artists.'];
+  var TO_ACTIVE = ['The game was won by our team.|Our team won the game.', 'The letter was written by Priya.|Priya wrote the letter.', 'The trees were planted by the students.|The students planted the trees.', 'The song was sung by the choir.|The choir sang the song.',
+    'The bridge was built by engineers.|Engineers built the bridge.', 'The meal was cooked by my uncle.|My uncle cooked the meal.', 'The race was won by a rookie.|A rookie won the race.', 'The mural was painted by local artists.|Local artists painted the mural.'];
   var FACT = ['Ottawa is the capital of Canada.|fact', 'Hockey is the most exciting sport.|opinion', 'Water freezes at 0 °C.|fact', 'Summer is the best season.|opinion',
     'The Bay of Fundy has very high tides.|fact', 'Cats are better pets than dogs.|opinion', 'Canada has three oceans on its coasts.|fact', 'Broccoli tastes awful.|opinion',
     'Maple syrup comes from maple sap.|fact', 'Everyone should learn to skate.|opinion', 'The Rocky Mountains are in western Canada.|fact', 'Math is more fun than art.|opinion'];
-  var COMBINE = ['The dog was tired. The dog lay down.', 'It was raining. We played inside.', 'Mia likes soccer. Mia likes hockey.', 'The bus was late. We missed the movie.',
-    'I studied. I passed the test.', 'The lake is deep. The lake is cold.', 'Omar finished his work. Omar went outside.', 'The museum opened. Crowds rushed in.'];
+  var COMBINE = ['The dog was tired. The dog lay down.|The tired dog lay down.', 'It was raining. We played inside.|It was raining, so we played inside.', 'Mia likes soccer. Mia likes hockey.|Mia likes soccer and hockey.', 'The bus was late. We missed the movie.|The bus was late, so we missed the movie.',
+    'I studied. I passed the test.|I studied, so I passed the test.', 'The lake is deep. The lake is cold.|The lake is deep and cold.', 'Omar finished his work. Omar went outside.|Omar finished his work and went outside.', 'The museum opened. Crowds rushed in.|When the museum opened, crowds rushed in.'];
 
   // pick lists for a grade: bands from grade-4 up to this grade (easy leans on the lower bands)
   function bands(obj, g, L) {
@@ -139,23 +139,23 @@ window.HWLIB.E = function (H) {
     return function (L) {
       var spell = bands(SPELL, g, L), conf = bands(CONFUSED, g, L), pos = bands(POS, g, L), punct = bands(PUNCT, g, L), syn = bands(SYN, g, L), ant = bands(ANT, g, L);
       var k = [
-        function (R) { var p = pick(R, spell).split('|'); return Q('sp:' + p[0], 'Circle the correct spelling:' + circ(shuffle(R, p.map(function (w) { return w.replace('?', ''); })))); },
-        function (R) { var p = pick(R, conf).split('|'); return Q('cf:' + p[0], esc(p[0]).replace('___', BLS) + circ(shuffle(R, p.slice(1)))); },
-        function (R) { var p = pick(R, pos).split('|'); return Q('ps:' + p[1], 'Circle the <b>' + p[0] + '</b>: ' + p[1].replace(/<u>|<\/u>/g, '') + circ(shuffle(R, p.slice(2)))); },
-        function (R) { var s = pick(R, punct); return Q('pu:' + s, 'Fix the capitals and punctuation: <i>' + esc(s) + '</i>' + BLL); },
-        function (R) { var p = pick(R, syn).split('|'); return Q('sy:' + p[0], 'Synonym for <b>' + esc(p[0]) + '</b>: ' + BLM); },
-        function (R) { var p = pick(R, ant).split('|'); return Q('an:' + p[0], 'Antonym for <b>' + esc(p[0]) + '</b>: ' + BLM); }
+        function (R) { var p = pick(R, spell).split('|'); return Q('sp:' + p[0], 'Circle the correct spelling:' + circ(shuffle(R, p.map(function (w) { return w.replace('?', ''); }))), esc(p[0].replace('?', ''))); },
+        function (R) { var p = pick(R, conf).split('|'); return Q('cf:' + p[0], esc(p[0]).replace('___', BLS) + circ(shuffle(R, p.slice(1))), esc(p[1])); },
+        function (R) { var p = pick(R, pos).split('|'); return Q('ps:' + p[1], 'Circle the <b>' + p[0] + '</b>: ' + p[1].replace(/<u>|<\/u>/g, '') + circ(shuffle(R, p.slice(2))), esc(p[2])); },
+        function (R) { var p = pick(R, punct).split('|'); return Q('pu:' + p[0], 'Fix the capitals and punctuation: <i>' + esc(p[0]) + '</i>' + BLL, esc(p[1])); },
+        function (R) { var p = pick(R, syn).split('|'); return Q('sy:' + p[0], 'Synonym for <b>' + esc(p[0]) + '</b>: ' + BLM, 'e.g. ' + esc(p[1])); },
+        function (R) { var p = pick(R, ant).split('|'); return Q('an:' + p[0], 'Antonym for <b>' + esc(p[0]) + '</b>: ' + BLM, esc(p[1])); }
       ];
-      if (g >= 4) k.push(function (R) { var p = pick(R, bands(FIG, g, L)).split('|'); return Q('fg:' + p[0], esc(p[0]) + circ(shuffle(R, p.slice(1)))); });
-      if (g >= 5) k.push(function (R) { var p = pick(R, bands(ROOTS, g, L)).split('|'); return Q('rt:' + p[0], 'Meaning of <b>' + esc(p[0].replace(' = ?', '')) + '</b>:' + circ(shuffle(R, p.slice(1)))); });
-      if (g <= 6) k.push(function (R) { var p = pick(R, SENT_TYPE).split('|'); return Q('st:' + p[0], esc(p[0]) + circ(shuffle(R, ['declarative', 'interrogative', 'imperative', 'exclamatory']))); });
-      if (g >= 5 && g <= 9) k.push(function (R) { var p = pick(R, FRAG).split('|'); return Q('fr:' + p[0], esc(p[0]) + circ(['complete', 'fragment', 'run-on'])); });
-      if (g >= 6) k.push(function (R) { var p = pick(R, STRUCT).split('|'); return Q('ss:' + p[0], esc(p[0]) + circ(['simple', 'compound', 'complex'])); });
-      if (g >= 6) k.push(function (R) { var p = pick(R, bands(TERMS, g, L)).split('|'); return Q('lt:' + p[0], esc(p[0]) + ':' + circ(shuffle(R, p.slice(1)))); });
-      if (g >= 4 && g <= 8) k.push(function (R) { var p = pick(R, FACT).split('|'); return Q('fo:' + p[0], esc(p[0]) + circ(['fact', 'opinion'])); });
-      if (g >= 4 && g <= 9 && L !== 'easy') k.push(function (R) { var s = pick(R, COMBINE); return Q('cb:' + s, 'Combine into one sentence: <i>' + esc(s) + '</i>' + BLL); });
-      if (g >= 8) k.push(function (R) { var p = pick(R, VOICE).split('|'); return Q('vo:' + p[0], esc(p[0]) + circ(['active', 'passive'])); });
-      if (g >= 8 && L !== 'easy') k.push(function (R) { var s = pick(R, TO_ACTIVE); return Q('ta:' + s, 'Rewrite in the active voice: <i>' + esc(s) + '</i>' + BLL); });
+      if (g >= 4) k.push(function (R) { var p = pick(R, bands(FIG, g, L)).split('|'); return Q('fg:' + p[0], esc(p[0]) + circ(shuffle(R, p.slice(1))), esc(p[1])); });
+      if (g >= 5) k.push(function (R) { var p = pick(R, bands(ROOTS, g, L)).split('|'); return Q('rt:' + p[0], 'Meaning of <b>' + esc(p[0].replace(' = ?', '')) + '</b>:' + circ(shuffle(R, p.slice(1))), esc(p[1])); });
+      if (g <= 6) k.push(function (R) { var p = pick(R, SENT_TYPE).split('|'); return Q('st:' + p[0], esc(p[0]) + circ(shuffle(R, ['declarative', 'interrogative', 'imperative', 'exclamatory'])), esc(p[1])); });
+      if (g >= 5 && g <= 9) k.push(function (R) { var p = pick(R, FRAG).split('|'); return Q('fr:' + p[0], esc(p[0]) + circ(['complete', 'fragment', 'run-on']), esc(p[1])); });
+      if (g >= 6) k.push(function (R) { var p = pick(R, STRUCT).split('|'); return Q('ss:' + p[0], esc(p[0]) + circ(['simple', 'compound', 'complex']), esc(p[1])); });
+      if (g >= 6) k.push(function (R) { var p = pick(R, bands(TERMS, g, L)).split('|'); return Q('lt:' + p[0], esc(p[0]) + ':' + circ(shuffle(R, p.slice(1))), esc(p[1])); });
+      if (g >= 4 && g <= 8) k.push(function (R) { var p = pick(R, FACT).split('|'); return Q('fo:' + p[0], esc(p[0]) + circ(['fact', 'opinion']), esc(p[1])); });
+      if (g >= 4 && g <= 9 && L !== 'easy') k.push(function (R) { var p = pick(R, COMBINE).split('|'); return Q('cb:' + p[0], 'Combine into one sentence: <i>' + esc(p[0]) + '</i>' + BLL, 'e.g. ' + esc(p[1])); });
+      if (g >= 8) k.push(function (R) { var p = pick(R, VOICE).split('|'); return Q('vo:' + p[0], esc(p[0]) + circ(['active', 'passive']), esc(p[1])); });
+      if (g >= 8 && L !== 'easy') k.push(function (R) { var p = pick(R, TO_ACTIVE).split('|'); return Q('ta:' + p[0], 'Rewrite in the active voice: <i>' + esc(p[0]) + '</i>' + BLL, esc(p[1])); });
       if (g <= 6) k.push(H.W.enPastKind(Object.keys(H.W.EN_IRR)));
       if (g >= 7 && g <= 9) k.push(H.W.enPastKind(Object.keys(H.W.EN_IRR), true));
       return k;

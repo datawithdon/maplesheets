@@ -34,10 +34,10 @@ window.HWLIB.W = function (H) {
   function numWords(max) {
     return function (R, L) {
       var top = lv(max, L), k = ri(R, 0, top), w = fr ? enNum : frNum;
-      if (R() < 0.5) return Q('nw:' + k, T('Write the number:', 'Écris le nombre :') + ' <b>' + w(k) + '</b> = ' + BLS);
+      if (R() < 0.5) return Q('nw:' + k, T('Write the number:', 'Écris le nombre :') + ' <b>' + w(k) + '</b> = ' + BLS, String(k));
       var pool = []; for (var i = 0; i <= top; i++) if (i !== k) pool.push(i);
       var near = pool.filter(function (x) { return Math.abs(x - k) <= 12; });
-      return Q('nw:' + k, T('Circle', 'Encercle') + ' <b>' + k + '</b>' + T(':', ' :') + circ(shuffle(R, sample(R, near.length >= 2 ? near : pool, 2).concat([k]).map(w))));
+      return Q('nw:' + k, T('Circle', 'Encercle') + ' <b>' + k + '</b>' + T(':', ' :') + circ(shuffle(R, sample(R, near.length >= 2 ? near : pool, 2).concat([k]).map(w))), w(k));
     };
   }
 
@@ -104,23 +104,23 @@ window.HWLIB.W = function (H) {
     function same(list, w) { return list.filter(function (x) { return x.topic === w.topic && x !== w && tgt(x) !== tgt(w); }); }
     var circleIt = function (R, L) {
       var v = words(L), w = pick(R, v), ch = sample(R, same(v, w), 2).map(tgt).concat([tgt(w)]);
-      return Q('vc:' + w.fr, T('Circle the French word for <b>' + esc(w.en) + '</b>:', 'Encercle le mot anglais pour <b>' + esc(w.fr) + '</b> :') + circ(shuffle(R, ch)));
+      return Q('vc:' + w.fr, T('Circle the French word for <b>' + esc(w.en) + '</b>:', 'Encercle le mot anglais pour <b>' + esc(w.fr) + '</b> :') + circ(shuffle(R, ch)), esc(tgt(w)));
     };
     var meaning = function (R, L) {
       var v = words(L), w = pick(R, v), ch = sample(R, same(v, w), 2).map(home).concat([home(w)]);
-      return Q('vm:' + w.fr, T('What does <b>' + esc(w.fr) + '</b> mean?', 'Que veut dire <b>' + esc(w.en) + '</b>?') + circ(shuffle(R, ch)));
+      return Q('vm:' + w.fr, T('What does <b>' + esc(w.fr) + '</b> mean?', 'Que veut dire <b>' + esc(w.en) + '</b>?') + circ(shuffle(R, ch)), esc(home(w)));
     };
     var write = function (R, L) {
       var w = pick(R, words(L)), toTarget = opts.writeTarget && lv(opts.writeTarget, L);
-      if (toTarget) return Q('vw:' + w.fr, T('Write it in French:', 'Écris-le en anglais :') + ' <b>' + esc(home(w)) + '</b> → ' + BLM);
-      return Q('vw:' + w.fr, T('Write it in English:', 'Écris-le en français :') + ' <b>' + esc(tgt(w)) + '</b> → ' + BLM);
+      if (toTarget) return Q('vw:' + w.fr, T('Write it in French:', 'Écris-le en anglais :') + ' <b>' + esc(home(w)) + '</b> → ' + BLM, esc(tgt(w)));
+      return Q('vw:' + w.fr, T('Write it in English:', 'Écris-le en français :') + ' <b>' + esc(tgt(w)) + '</b> → ' + BLM, esc(home(w)));
     };
     return [circleIt, meaning, write];
   }
   function oddOne(topics) {
     return function (R, L) {
       var tps = sample(R, lv(topics, L), 2), a = sample(R, vocab([tps[0]]), 3), b = pick(R, vocab([tps[1]]));
-      return Q('odd:' + a.map(tgt).join() + tgt(b), T('Circle the word that does not belong:', 'Encercle l’intrus :') + circ(shuffle(R, a.concat([b]).map(tgt))));
+      return Q('odd:' + a.map(tgt).join() + tgt(b), T('Circle the word that does not belong:', 'Encercle l’intrus :') + circ(shuffle(R, a.concat([b]).map(tgt))), esc(tgt(b)));
     };
   }
 
@@ -209,9 +209,9 @@ window.HWLIB.W = function (H) {
         var others = SUBJ.filter(function (x) { return PERSON[x] !== PERSON[s]; }).map(function (x) { return strip(conj(v, tense, x)); });
         var right = strip(answer);
         var opts = others.filter(function (o, i) { return o !== right && others.indexOf(o) === i; });
-        return Q('fv:' + v + tense + s, H.cap(shown) + ' ' + BLS + ' (<b>' + v + '</b>, ' + tn + ')' + circ(shuffle(R, sample(R, opts, 2).concat([right]))));
+        return Q('fv:' + v + tense + s, H.cap(shown) + ' ' + BLS + ' (<b>' + v + '</b>, ' + tn + ')' + circ(shuffle(R, sample(R, opts, 2).concat([right]))), right);
       }
-      return Q('fv:' + v + tense + s, '<b>' + v + '</b> (' + tn + ')' + T(': ', ' : ') + (tense === 'subj' ? 'Il faut ' + shown : H.cap(shown)) + ' ' + BLM);
+      return Q('fv:' + v + tense + s, '<b>' + v + '</b> (' + tn + ')' + T(': ', ' : ') + (tense === 'subj' ? 'Il faut ' + shown : H.cap(shown)) + ' ' + BLM, answer);
     };
   }
 
@@ -282,16 +282,16 @@ window.HWLIB.W = function (H) {
       var gloss = fr && c.gloss ? ' (' + (EN_FR[v] || '') + ')' : '';
       if (c.choice && R() < 0.5) {
         var forms = [v, enS(v), enPast(v), enIng(v), enPart(v)].filter(function (f, i, a) { return a.indexOf(f) === i && f !== ans; });
-        return Q('ev:' + v + tense + s, '<b>' + esc(v) + '</b>' + gloss + ' (' + tn + ')' + T(': ', ' : ') + (s === 'I' ? 'I' : H.cap(s)) + ' ' + BLS + circ(shuffle(R, sample(R, forms, 2).concat([ans]))));
+        return Q('ev:' + v + tense + s, '<b>' + esc(v) + '</b>' + gloss + ' (' + tn + ')' + T(': ', ' : ') + (s === 'I' ? 'I' : H.cap(s)) + ' ' + BLS + circ(shuffle(R, sample(R, forms, 2).concat([ans]))), ans);
       }
-      return Q('ev:' + v + tense + s, '<b>' + esc(v) + '</b>' + gloss + ' (' + tn + ')' + T(': ', ' : ') + (s === 'I' ? 'I' : H.cap(s)) + ' ' + BLM);
+      return Q('ev:' + v + tense + s, '<b>' + esc(v) + '</b>' + gloss + ' (' + tn + ')' + T(': ', ' : ') + (s === 'I' ? 'I' : H.cap(s)) + ' ' + BLM, ans);
     };
   }
   function enPastKind(verbs, wantPart) {
     return function (R, L) {
       var v = pick(R, lv(verbs, L).filter(function (x) { return x !== 'be'; }));
-      if (wantPart) return Q('pp:' + v, T('Past participle of', 'Participe passé de') + ' <b>' + v + '</b>: ' + BLM);
-      return Q('pt:' + v, T('Past tense of', 'Passé de') + ' <b>' + v + '</b>: ' + BLM);
+      if (wantPart) return Q('pp:' + v, T('Past participle of', 'Participe passé de') + ' <b>' + v + '</b>: ' + BLM, enPart(v));
+      return Q('pt:' + v, T('Past tense of', 'Passé de') + ' <b>' + v + '</b>: ' + BLM, enPast(v));
     };
   }
   var ADJ = { big: ['bigger', 'biggest'], small: ['smaller', 'smallest'], tall: ['taller', 'tallest'], fast: ['faster', 'fastest'], happy: ['happier', 'happiest'],
@@ -302,7 +302,7 @@ window.HWLIB.W = function (H) {
   function enCompare() {
     return function (R) {
       var a = pick(R, Object.keys(ADJ)), sup = R() < 0.5;
-      return Q('cmp:' + a + sup, T((sup ? 'Superlative' : 'Comparative') + ' of', (sup ? 'Superlatif' : 'Comparatif') + ' de') + ' <b>' + a + '</b>: ' + (sup ? 'the ' : '') + BLM);
+      return Q('cmp:' + a + sup, T((sup ? 'Superlative' : 'Comparative') + ' of', (sup ? 'Superlatif' : 'Comparatif') + ' de') + ' <b>' + a + '</b>: ' + (sup ? 'the ' : '') + BLM, (sup ? 'the ' : '') + ADJ[a][sup ? 1 : 0]);
     };
   }
 
@@ -315,7 +315,7 @@ window.HWLIB.W = function (H) {
   function frGender(topics) {
     return function (R, L) {
       var list = vocab(lv(topics, L)).filter(function (w) { return w.g; }), w = pick(R, list), def = R() < 0.5 && !/^[aeéèêiîoôuhœ]/i.test(w.fr);
-      return Q('gn:' + w.fr + def, (fr ? 'Encercle le bon déterminant :' : 'Circle the right word:') + ' ' + BLS + ' <b>' + esc(w.fr) + '</b>' + circ(def ? ['le', 'la'] : ['un', 'une']));
+      return Q('gn:' + w.fr + def, (fr ? 'Encercle le bon déterminant :' : 'Circle the right word:') + ' ' + BLS + ' <b>' + esc(w.fr) + '</b>' + circ(def ? ['le', 'la'] : ['un', 'une']), def ? (w.g === 'f' ? 'la' : 'le') : (w.g === 'f' ? 'une' : 'un'));
     };
   }
   var ADJ_FR = [['grand', 'grande'], ['petit', 'petite'], ['content', 'contente'], ['vert', 'verte'], ['fatigué', 'fatiguée'], ['heureux', 'heureuse'],
@@ -328,17 +328,19 @@ window.HWLIB.W = function (H) {
       var a = pick(R, ADJ_FR), nn = pick(R, NOUN_FR), form = nn[1] === 'f' ? a[1] : a[0];
       if (nn[2] === 'p') form = /[sx]$/.test(form) ? form : /eau$/.test(form) ? form + 'x' : form + 's';
       var verb = nn[2] === 'p' ? 'sont' : 'est';
-      return Q('ag:' + a[0] + nn[0], (fr ? 'Accorde l’adjectif' : 'Make the adjective agree') + ' (<b>' + a[0] + '</b>) :<br>' + H.cap(nn[0]) + ' ' + verb + ' ' + BLM + '.');
+      return Q('ag:' + a[0] + nn[0], (fr ? 'Accorde l’adjectif' : 'Make the adjective agree') + ' (<b>' + a[0] + '</b>) :<br>' + H.cap(nn[0]) + ' ' + verb + ' ' + BLM + '.', form);
     };
   }
   function frNegate() {
-    var S = [['Je mange une pomme.', 'je'], ['Tu joues au hockey.', 'tu'], ['Il aime la pizza.', 'il'], ['Nous regardons la télé.', 'nous'],
-      ['Vous parlez anglais.', 'vous'], ['Elles dansent bien.', 'elles'], ['J’aime le brocoli.', 'je'], ['Il fait froid.', 'il'], ['Nous allons au parc.', 'nous'],
-      ['Elle a un chat.', 'elle'], ['Ils sont fatigués.', 'ils'], ['Je suis malade.', 'je'], ['Tu écoutes la radio.', 'tu'], ['Marie lit un livre.', 'marie'],
-      ['Le chien court vite.', 'chien'], ['J’ai faim.', 'je'], ['Vous finissez vos devoirs.', 'vous'], ['On va à la plage.', 'on']];
+    var S = [['Je mange une pomme.', 'Je ne mange pas de pomme.'], ['Tu joues au hockey.', 'Tu ne joues pas au hockey.'], ['Il aime la pizza.', 'Il n’aime pas la pizza.'],
+      ['Nous regardons la télé.', 'Nous ne regardons pas la télé.'], ['Vous parlez anglais.', 'Vous ne parlez pas anglais.'], ['Elles dansent bien.', 'Elles ne dansent pas bien.'],
+      ['J’aime le brocoli.', 'Je n’aime pas le brocoli.'], ['Il fait froid.', 'Il ne fait pas froid.'], ['Nous allons au parc.', 'Nous n’allons pas au parc.'],
+      ['Elle a un chat.', 'Elle n’a pas de chat.'], ['Ils sont fatigués.', 'Ils ne sont pas fatigués.'], ['Je suis malade.', 'Je ne suis pas malade.'],
+      ['Tu écoutes la radio.', 'Tu n’écoutes pas la radio.'], ['Marie lit un livre.', 'Marie ne lit pas de livre.'], ['Le chien court vite.', 'Le chien ne court pas vite.'],
+      ['J’ai faim.', 'Je n’ai pas faim.'], ['Vous finissez vos devoirs.', 'Vous ne finissez pas vos devoirs.'], ['On va à la plage.', 'On ne va pas à la plage.']];
     return function (R) {
-      var s = pick(R, S)[0];
-      return Q('ng:' + s, (fr ? 'Écris la phrase à la forme négative :' : 'Make it negative (ne… pas):') + '<br><i>' + esc(s) + '</i>' + BLL);
+      var it = pick(R, S), s = it[0];
+      return Q('ng:' + s, (fr ? 'Écris la phrase à la forme négative :' : 'Make it negative (ne… pas):') + '<br><i>' + esc(s) + '</i>' + BLL, esc(it[1]));
     };
   }
 

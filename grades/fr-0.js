@@ -14,23 +14,23 @@ HW.register('fr-0', function (H) {
   var SIGHT = ['le', 'la', 'les', 'un', 'une', 'et', 'est', 'je', 'il', 'elle', 'on', 'moi', 'oui', 'non', 'papa', 'maman', 'ami', 'chat', 'dans', 'sur', 'avec', 'mon', 'ma', 'va'];
   var RHY = ['chat|rat|lune', 'pain|main|vélo', 'bateau|gâteau|fleur', 'souris|tapis|soleil', 'lit|nid|banane', 'feu|jeu|pomme', 'chou|loup|table', 'cou|hibou|robe',
     'balle|malle|pied', 'nez|clé|ours', 'lapin|sapin|crayon', 'mouton|bouton|neige'];
-  var smallFor = function (R) { var i = ri(R, 0, 25), ch = LOW[i]; return Q('sf:' + ch, 'Encercle la petite lettre pour ' + big(UP[i]) + circ(shuffle(R, likeL(R, ch).concat([ch])))); };
-  var bigFor = function (R) { var i = ri(R, 0, 25); return Q('bf:' + i, 'Écris la grande lettre pour ' + big(LOW[i]) + ' : ' + BLS); };
-  var nextLetter = function (R) { var i = ri(R, 0, 23); return Q('nl:' + i, 'Quelle lettre vient ensuite?<br>' + big(UP[i] + ' ' + UP[i + 1] + ' ' + UP[i + 2]) + ' ' + BLS); };
+  var smallFor = function (R) { var i = ri(R, 0, 25), ch = LOW[i]; return Q('sf:' + ch, 'Encercle la petite lettre pour ' + big(UP[i]) + circ(shuffle(R, likeL(R, ch).concat([ch]))), ch); };
+  var bigFor = function (R) { var i = ri(R, 0, 25); return Q('bf:' + i, 'Écris la grande lettre pour ' + big(LOW[i]) + ' : ' + BLS, UP[i]); };
+  var nextLetter = function (R) { var i = ri(R, 0, 22); return Q('nl:' + i, 'Quelle lettre vient ensuite?<br>' + big(UP[i] + ' ' + UP[i + 1] + ' ' + UP[i + 2]) + ' ' + BLS, UP[i + 3]); };
   var firstSound = function (R) {
     var p = pick(R, START).split('|'), others = sample(R, ['a', 'b', 'd', 'f', 'l', 'm', 'p', 'r', 's', 't', 'v', 'o', 'ch'].filter(function (c) { return c !== p[1]; }), 2);
-    return Q('fs:' + p[0], 'Dis <b>' + p[0] + '</b>. Par quel son commence ce mot?' + circ(shuffle(R, others.concat([p[1]]))));
+    return Q('fs:' + p[0], 'Dis <b>' + p[0] + '</b>. Par quel son commence ce mot?' + circ(shuffle(R, others.concat([p[1]]))), p[1]);
   };
-  var sight = function (R) { var w = pick(R, SIGHT), others = sample(R, SIGHT.filter(function (x) { return x !== w; }), 2); return Q('sw:' + w, 'Encercle le mot ' + big(w) + circ(shuffle(R, others.concat([w])))); };
-  var rhyme = function (R) { var p = pick(R, RHY).split('|'); return Q('rh:' + p[0], 'Quel mot rime avec <b>' + p[0] + '</b>?' + circ(shuffle(R, p.slice(1)))); };
+  var sight = function (R) { var w = pick(R, SIGHT), others = sample(R, SIGHT.filter(function (x) { return x !== w; }), 2); return Q('sw:' + w, 'Encercle le mot ' + big(w) + circ(shuffle(R, others.concat([w]))), w); };
+  var rhyme = function (R) { var p = pick(R, RHY).split('|'); return Q('rh:' + p[0], 'Quel mot rime avec <b>' + p[0] + '</b>?' + circ(shuffle(R, p.slice(1))), p[1]); };
   function lettres(L) { return L === 'easy' ? [smallFor, bigFor, nextLetter, firstSound] : [smallFor, bigFor, nextLetter, firstSound, sight, rhyme]; }
 
   // ---------- Écriture ----------
   var COPY = ['ami', 'lit', 'nez', 'feu', 'jeu', 'bal', 'sac', 'vélo', 'papa', 'maman', 'lune', 'chat', 'pomme', 'lapin', 'robe', 'bébé', 'rat', 'mur', 'sol', 'été'];
-  var writeLetter = function (R) { var i = ri(R, 0, 25); return Q('wl:' + i, 'Écris ' + big(UP[i] + ' ' + LOW[i]) + ' : ' + BLS + ' ' + BLS + ' ' + BLS); };
-  var copyWord = function (R) { var w = pick(R, COPY); return Q('cw:' + w, 'Copie le mot ' + big(w) + ' : ' + BLM); };
-  var missingLetter = function (R) { var w = pick(R, COPY), k = ri(R, 0, w.length - 1); return Q('ml:' + w + k, 'Écris la lettre qui manque : ' + big(w.slice(0, k) + '_' + w.slice(k + 1)).replace('_', BLS) + ' (' + w + ')'); };
-  var writeName = function (R) { var n = ri(R, 1, 3); return Q('nm:' + n, (n === 1 ? 'Écris ton prénom :' : n === 2 ? 'Écris encore ton prénom, bien lisiblement :' : 'Écris ton prénom en grosses lettres :') + '<br>' + H.BLL); };
+  var writeLetter = function (R) { var i = ri(R, 0, 25); return Q('wl:' + i, 'Écris ' + big(UP[i] + ' ' + LOW[i]) + ' : ' + BLS + ' ' + BLS + ' ' + BLS, H.open()); };
+  var copyWord = function (R) { var w = pick(R, COPY); return Q('cw:' + w, 'Copie le mot ' + big(w) + ' : ' + BLM, w); };
+  var missingLetter = function (R) { var w = pick(R, COPY), k = ri(R, 0, w.length - 1); return Q('ml:' + w + k, 'Écris la lettre qui manque : ' + big(w.slice(0, k) + '_' + w.slice(k + 1)).replace('_', BLS) + ' (' + w + ')', w.charAt(k)); };
+  var writeName = function (R) { var n = ri(R, 1, 3); return Q('nm:' + n, (n === 1 ? 'Écris ton prénom :' : n === 2 ? 'Écris encore ton prénom, bien lisiblement :' : 'Écris ton prénom en grosses lettres :') + '<br>' + H.BLL, H.open()); };
   function ecriture() { return [writeLetter, copyWord, missingLetter, writeName]; }
 
   return {

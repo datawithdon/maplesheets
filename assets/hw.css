@@ -92,3 +92,10 @@ body{background:var(--bg);color:var(--ink);font-family:Arial,"Liberation Sans",H
 .g0 .q .big{font-size:18pt}
 sup .bl.s{width:.3in;height:.75em}
 .reading:not(.legacy) .ch{white-space:normal}
+.row-c label.inline{flex-direction:row;align-items:center;gap:6px;font-weight:600}
+.keybody{display:block}
+.key-block{margin:2pt 0 8pt}
+.key-block h2{font-size:12pt;margin:0 0 3pt;border-bottom:.75pt solid #999}
+.key-list{column-count:3;column-gap:.22in;font-size:8.5pt;line-height:1.25;margin:0;padding-left:20pt}
+.key-list li{break-inside:avoid;padding:0 0 1.5pt}
+.key-list .frac{font-size:.85em}
