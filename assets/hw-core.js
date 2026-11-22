@@ -3,6 +3,17 @@
 // Shared libraries (hw-math.js, hw-lang.js) load first and add themselves to window.HWLIB.
 'use strict';
 (function () {
+  // Trusted Types (enforced by homework.html's CSP) allows exactly two policies:
+  // worksheet HTML may only come from buildSheet(), which escapes every value,
+  // and the only script URL allowed is a grade file from the fixed list below.
+  var TT = window.trustedTypes;
+  var sheetPolicy = TT ? TT.createPolicy('hw-sheet', { createHTML: function (html) { return html; } }) : null;
+  var gradePolicy = TT ? TT.createPolicy('hw-grade', {
+    createScriptURL: function (u) {
+      if (/^grades\/(?:en-(?:[0-9]|1[0-2])|fr-(?:[0-9]|1[01]))\.js$/.test(u)) return u;
+      throw new TypeError('Blocked script URL');
+    }
+  }) : null;
   // Grades that have worksheets, per language. Keep in step with app.js and sender/pdf_maker.py (a test checks).
   var AVAILABLE = { en: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'], fr: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'] };
 
@@ -568,7 +579,8 @@
   function render() {
     var main = $('sheet'), warn = $('warn');
     try {
-      main.innerHTML = buildSheet(PACK, state);
+      var html = buildSheet(PACK, state);
+      main.innerHTML = sheetPolicy ? sheetPolicy.createHTML(html) : html;
     } catch (e) {
       main.textContent = '';
       fail(UI[lang].cannot(e && e.message ? e.message : 'unknown error'));
@@ -634,7 +646,8 @@
     fail(UI[lang].notReady);
   } else {
     var s = document.createElement('script');
-    s.src = 'grades/' + state.lang + '-' + state.grade + '.js';
+    var gradeUrl = 'grades/' + state.lang + '-' + state.grade + '.js';
+    s.src = gradePolicy ? gradePolicy.createScriptURL(gradeUrl) : gradeUrl;
     s.onerror = function () { fail(UI[lang].cannot('missing file')); };
     document.head.appendChild(s);
   }
