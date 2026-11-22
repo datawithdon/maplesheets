@@ -5,37 +5,85 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src https://*.supabase.co; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="Devoirs gratuits à imprimer pour les enfants du Canada, de la maternelle à la fin du secondaire, et un PDF quotidien par courriel.">
-<title>Feuilles d’érable</title>
+<meta name="description" content="Devoirs gratuits à imprimer pour les enfants du Québec et du Canada, de la maternelle à la fin du secondaire, avec corrigé, et un PDF quotidien par courriel.">
+<meta name="theme-color" content="#5cc2ff">
+<title>Feuilles d’érable · Devoirs gratuits à imprimer</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body data-page="home">
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="index-fr.html">Feuilles d’érable</a>
-    <nav><a href="homework.html?lang=fr">Essayer les feuilles</a><a href="app-fr.html" id="goApp" hidden>Mon compte</a><a href="index.html" lang="en">English</a></nav>
+    <a class="brand" href="index-fr.html"><span class="logo" aria-hidden="true"><svg viewBox="-2015 -2015 4030 4030"><path d="m-90 2030 45-863a95 95 0 0 0-111-98l-859 151 116-320a65 65 0 0 0-20-73l-941-762 212-99a65 65 0 0 0 34-79l-186-572 542 115a65 65 0 0 0 73-38l105-247 423 454a65 65 0 0 0 111-57l-204-1052 327 189a65 65 0 0 0 91-27l332-652 332 652a65 65 0 0 0 91 27l327-189-204 1052a65 65 0 0 0 111 57l423-454 105 247a65 65 0 0 0 73 38l542-115-186 572a65 65 0 0 0 34 79l212 99-941 762a65 65 0 0 0-20 73l116 320-859-151a95 95 0 0 0-111 98l45 863z"/></svg></span><span>Feuilles d’érable</span></a>
+    <nav><a href="homework.html?lang=fr">Feuilles</a><a href="app-fr.html" id="goApp" hidden>Mon compte</a><a href="index.html" lang="en">English</a><a class="pill" href="#join">S’inscrire</a></nav>
   </header>
 
   <section class="hero">
-    <h1>Des devoirs frais chaque jour d’école, faits pour les enfants d’ici.</h1>
-    <p>Des feuilles à imprimer de la maternelle à la fin du secondaire : mathématiques, lecture, français et langue seconde. Activez le courriel quotidien et un nouveau PDF de 8 pages arrive dans votre boîte après l’école.</p>
+    <h1>Des devoirs frais chaque jour d’école, faits pour les enfants d’ici!</h1>
+    <p class="lead">Des feuilles à imprimer de la maternelle à la 5e secondaire, avec un corrigé pour les parents. Imprimez-les quand vous voulez, ou recevez un nouveau PDF après l’école.</p>
+    <div class="cta"><a class="btn big" href="#grades">Choisir un niveau</a><a class="btn big white" href="#join">Créer un compte gratuit</a></div>
+    <ul class="bubbles"><li><span aria-hidden="true">➕</span>Mathématiques</li><li><span aria-hidden="true">📖</span>Lecture</li><li><span aria-hidden="true">✏️</span>Français</li><li><span aria-hidden="true">💬</span>Anglais</li><li><span aria-hidden="true">✅</span>Corrigé</li></ul>
   </section>
 
-  <div class="grid2">
-    <div class="card">
-      <h2>Ce que vous obtenez</h2>
-      <ul class="features">
-        <li>50 questions par matière, au niveau Facile, Moyen ou Difficile</li>
-        <li>Des textes de lecture originaux qui se passent partout au Canada</li>
-        <li>Un corrigé pour les parents à la fin de chaque PDF</li>
-        <li>Au Québec, tout est en français, de la maternelle à la 5e secondaire, avec l’anglais comme langue seconde</li>
-        <li>Une nouvelle feuille chaque jour, ou réimprimez une feuille avec son numéro</li>
-        <li>Jusqu’à 6 enfants par famille, chacun avec son année et son niveau</li>
-        <li>Gratuit pendant notre lancement</li>
-      </ul>
-      <p class="small muted">Pas besoin de compte pour <a href="homework.html?lang=fr">essayer les feuilles</a>.</p>
+  <section class="section" id="grades">
+    <div class="section-head"><h2>Choisissez une année</h2><p>Touchez une année pour ouvrir les feuilles du jour. Aucun compte requis.</p></div>
+    <div class="tiles">
+      <a class="tile" href="homework.html?grade=0&amp;lang=fr"><b>M</b><span>Maternelle</span></a>
+      <a class="tile" href="homework.html?grade=1&amp;lang=fr"><b>1</b><span>1re année</span></a>
+      <a class="tile" href="homework.html?grade=2&amp;lang=fr"><b>2</b><span>2e année</span></a>
+      <a class="tile" href="homework.html?grade=3&amp;lang=fr"><b>3</b><span>3e année</span></a>
+      <a class="tile" href="homework.html?grade=4&amp;lang=fr"><b>4</b><span>4e année</span></a>
+      <a class="tile" href="homework.html?grade=5&amp;lang=fr"><b>5</b><span>5e année</span></a>
+      <a class="tile" href="homework.html?grade=6&amp;lang=fr"><b>6</b><span>6e année</span></a>
+      <a class="tile" href="homework.html?grade=7&amp;lang=fr"><b>S1</b><span>Secondaire 1</span></a>
+      <a class="tile" href="homework.html?grade=8&amp;lang=fr"><b>S2</b><span>Secondaire 2</span></a>
+      <a class="tile" href="homework.html?grade=9&amp;lang=fr"><b>S3</b><span>Secondaire 3</span></a>
+      <a class="tile" href="homework.html?grade=10&amp;lang=fr"><b>S4</b><span>Secondaire 4</span></a>
+      <a class="tile" href="homework.html?grade=11&amp;lang=fr"><b>S5</b><span>Secondaire 5</span></a>
     </div>
+    <p class="small muted mt">Hors Québec? <a href="index.html">Le site anglais</a> va de la maternelle à la 12e année.</p>
+  </section>
 
+  <section class="section">
+    <div class="section-head"><h2>Comment ça marche</h2><p>Trois étapes faciles, environ une minute.</p></div>
+    <div class="steps">
+      <div class="step"><div class="step-n" aria-hidden="true">1</div><h3>Choisissez l’année et le niveau</h3><p>Facile, Moyen ou Difficile. Chaque enfant a sa propre année et son niveau.</p></div>
+      <div class="step"><div class="step-n" aria-hidden="true">2</div><h3>Imprimez 8 pages</h3><p>Mathématiques, lecture, français et anglais : 2 pages chacun, recto verso.</p></div>
+      <div class="step"><div class="step-n" aria-hidden="true">3</div><h3>Corrigez avec le corrigé</h3><p>Les 2 dernières pages sont les réponses pour les parents.</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="samples">
+      <div class="fan">
+        <figure><img src="assets/img/sample-math-fr.jpg" width="682" height="900" alt="Exemple de page : Mathématiques" loading="lazy"><figcaption>Mathématiques</figcaption></figure>
+        <figure><img src="assets/img/sample-reading-fr.jpg" width="682" height="900" alt="Exemple de page : Lecture" loading="lazy"><figcaption>Lecture</figcaption></figure>
+        <figure><img src="assets/img/sample-key-fr.jpg" width="682" height="900" alt="Exemple de page : Corrigé" loading="lazy"><figcaption>Corrigé</figcaption></figure>
+      </div>
+      <div>
+        <h2>Voici ce que vous recevez</h2>
+        <p class="muted">De vraies pages d’une feuille de 3e année.</p>
+        <ul class="features">
+        <li>50 questions par matière, au niveau Facile, Moyen ou Difficile</li>
+        <li>Des textes de lecture originaux partout au Canada, environ 20 par année</li>
+        <li>Suit les années du Québec, de la maternelle à la 5e secondaire</li>
+        <li>Un corrigé pour les parents à la fin de chaque feuille</li>
+        <li>L’anglais comme langue seconde</li>
+        <li>Réimprimez une feuille plus tard avec son numéro</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section join" id="join">
+    <div>
+      <h2>Un nouveau PDF chaque jour d’école</h2>
+      <p class="muted">Créez un compte gratuit, ajoutez vos enfants et activez le courriel quotidien. Il arrive vers 16 h les jours d’école, sauf les fins de semaine et les jours fériés de votre province.</p>
+      <ul class="perks">
+        <li>🎁 Gratuit pendant notre lancement</li>
+        <li>👨‍👩‍👧 Jusqu’à 6 enfants par famille</li>
+        <li>🔒 Seulement un prénom ou un surnom</li>
+      </ul>
+    </div>
     <div class="card">
       <p class="notice" id="notConfigured" hidden>Les comptes ouvrent bientôt. Vous pouvez déjà utiliser les feuilles gratuitement.</p>
       <div id="authBox">
@@ -47,7 +95,7 @@
           <label>Courriel <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
           <label>Mot de passe (8 caractères ou plus) <input name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
           <label>Confirmer le mot de passe <input name="password2" type="password" autocomplete="new-password" required minlength="8" maxlength="72"></label>
-          <label class="check"><input name="agree" type="checkbox"> J’accepte les <a href="terms-fr.html">conditions</a> et la <a href="privacy-fr.html">politique de confidentialité</a>.</label>
+          <label class="check"><input name="agree" type="checkbox"> <span>J’accepte les <a href="terms-fr.html">conditions</a> et la <a href="privacy-fr.html">politique de confidentialité</a>.</span></label>
           <button type="submit">Créer un compte gratuit</button>
         </form>
         <form id="loginForm" novalidate hidden>
@@ -69,10 +117,22 @@
         <p class="msg" id="authMsg" role="status"></p>
       </div>
     </div>
-  </div>
+  </section>
+
+  <section class="section">
+    <h2>Questions des parents</h2>
+    <div class="faq">
+    <details><summary>Est-ce vraiment gratuit?</summary><p>Oui. Les feuilles et le courriel quotidien sont gratuits pendant notre lancement. Aucune carte de crédit.</p></details>
+    <details><summary>Ai-je besoin d’un compte?</summary><p>Non. Tout le monde peut imprimer des feuilles pour n’importe quelle année. Le compte sert seulement au courriel quotidien et à garder l’année et le niveau de chaque enfant.</p></details>
+    <details><summary>Est-ce que ça suit le programme de l’école?</summary><p>Les questions suivent ce que les enfants apprennent habituellement à chaque année : nombres, opérations, fractions, mesure, argent, lecture, grammaire, orthographe et anglais.</p></details>
+    <details><summary>Et hors du Québec?</summary><p>Les familles des autres provinces reçoivent les feuilles en anglais, de la maternelle à la 12e année, avec le français comme langue seconde.</p></details>
+    <details><summary>Comment arrêter le courriel quotidien?</summary><p>Décochez-le dans Mon compte, en tout temps. Vous pouvez aussi supprimer votre compte, ce qui efface tout.</p></details>
+    <details><summary>Que faites-vous de mes renseignements?</summary><p>Nous gardons seulement votre courriel, votre province et le prénom ou surnom, l’année et le niveau de chaque enfant. Rien n’est vendu ni partagé. <a href="privacy-fr.html">Lire la politique de confidentialité</a>.</p></details>
+    </div>
+  </section>
 
   <footer class="bottom">
-    <span>© Feuilles d’érable (MapleSheets)</span><a href="privacy-fr.html">Confidentialité</a><a href="terms-fr.html">Conditions</a><span data-contact></span>
+    <span>© Feuilles d’érable (MapleSheets)</span><a href="privacy-fr.html">Confidentialité</a><a href="terms-fr.html">Conditions</a><a href="index.html" lang="en">English</a><span data-contact></span>
   </footer>
 </div>
 <script src="config.js"></script>

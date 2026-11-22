@@ -8,7 +8,7 @@
 
   var UI = {
     en: {
-      brand: 'MapleSheets', subject: 'Subject', level: 'Level', sheet: 'Sheet #', dateOn: 'Date on sheet', newSheet: 'New sheet', print: 'Print',
+      brand: 'MapleSheets', gradeLbl: 'Grade', subject: 'Subject', level: 'Level', sheet: 'Sheet #', dateOn: 'Date on sheet', newSheet: 'New sheet', print: 'Print',
       topics: 'Math topics', all: 'All 4 subjects (8 pages)', allShort: 'All 4 subjects', account: 'My account',
       levels: { easy: 'Easy', medium: 'Medium', hard: 'Hard' }, name: 'Name', date: 'Date', score: 'Score',
       side: function (a, b) { return 'Side ' + a + ' of ' + b; }, sheetNo: 'Sheet #', country: 'Canada',
@@ -28,7 +28,7 @@
       grade: function (g) { return g === '0' ? 'Kindergarten' : 'Grade ' + g; }
     },
     fr: {
-      brand: 'Feuilles d’érable', subject: 'Matière', level: 'Niveau', sheet: 'Feuille no', dateOn: 'Date sur la feuille', newSheet: 'Nouvelle feuille', print: 'Imprimer',
+      brand: 'Feuilles d’érable', gradeLbl: 'Année', subject: 'Matière', level: 'Niveau', sheet: 'Feuille no', dateOn: 'Date sur la feuille', newSheet: 'Nouvelle feuille', print: 'Imprimer',
       topics: 'Thèmes de maths', all: 'Les 4 matières (8 pages)', allShort: 'Les 4 matières', account: 'Mon compte',
       levels: { easy: 'Facile', medium: 'Moyen', hard: 'Difficile' }, name: 'Nom', date: 'Date', score: 'Résultat',
       side: function (a, b) { return 'Côté ' + a + ' de ' + b; }, sheetNo: 'Feuille no\u00a0', country: 'Québec',
@@ -504,9 +504,20 @@
     var u = UI[lang];
     document.documentElement.lang = lang;
     document.title = PACK.title;
-    $('title').textContent = PACK.title;
+    $('title').textContent = u.grade(state.grade);
     $('account').textContent = u.account;
     $('account').href = lang === 'fr' ? 'app-fr.html' : 'app.html';
+    $('home').href = lang === 'fr' ? 'index-fr.html' : 'index.html';
+    $('brandName').textContent = u.brand;
+    $('lblGrade').textContent = u.gradeLbl;
+    var gsel = $('grade');
+    gsel.replaceChildren.apply(gsel, AVAILABLE[state.lang].map(function (g) { return opt(g, u.grade(g)); }));
+    gsel.value = state.grade;
+    gsel.addEventListener('change', function () {
+      if (AVAILABLE[state.lang].indexOf(gsel.value) >= 0) window.location.href = gradeLink(gsel.value, state.lang);
+    });
+    $('langEn').className = lang === 'en' ? 'on' : '';
+    $('langFr').className = lang === 'fr' ? 'on' : '';
     [['lblSubject', 'subject'], ['lblLevel', 'level'], ['lblSeed', 'sheet'], ['lblDate', 'dateOn'], ['newSheet', 'newSheet'], ['print', 'print'], ['topicsLegend', 'topics'], ['lblKey', 'keyBox']]
       .forEach(function (x) { $(x[0]).textContent = u[x[1]]; });
     var subj = $('subject');
@@ -525,7 +536,16 @@
     var tips = $('tips');
     tips.replaceChildren.apply(tips, u.tips.map(function (t) { var li = document.createElement('li'); li.textContent = t; return li; }));
   }
+  // Switching grade or language loads a different worksheet file, so it opens a fresh page (keeping the level).
+  function gradeLink(g, l) {
+    var q = new URLSearchParams({ grade: g });
+    if (l === 'fr') q.set('lang', 'fr');
+    q.set('level', state.level || 'medium');
+    return 'homework.html?' + q.toString();
+  }
   function syncControls() {
+    $('langEn').href = gradeLink(state.grade, 'en');
+    $('langFr').href = gradeLink(AVAILABLE.fr.indexOf(state.grade) >= 0 ? state.grade : AVAILABLE.fr[AVAILABLE.fr.length - 1], 'fr');
     var topicSubj = PACK.subjects.filter(function (s) { return s.topics; })[0];
     $('subject').value = state.subject;
     $('level').value = state.level;

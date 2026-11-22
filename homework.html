@@ -9,8 +9,16 @@
 </head>
 <body>
 <div class="controls no-print" id="controls" hidden>
-  <h2><span id="title">Homework</span> <a class="acct" id="account" href="app.html">My account</a></h2>
+  <div class="hw-top">
+    <a class="brand" id="home" href="index.html"><span class="logo" aria-hidden="true"><svg viewBox="-2015 -2015 4030 4030"><path d="m-90 2030 45-863a95 95 0 0 0-111-98l-859 151 116-320a65 65 0 0 0-20-73l-941-762 212-99a65 65 0 0 0 34-79l-186-572 542 115a65 65 0 0 0 73-38l105-247 423 454a65 65 0 0 0 111-57l-204-1052 327 189a65 65 0 0 0 91-27l332-652 332 652a65 65 0 0 0 91 27l327-189-204 1052a65 65 0 0 0 111 57l423-454 105 247a65 65 0 0 0 73 38l542-115-186 572a65 65 0 0 0 34 79l212 99-941 762a65 65 0 0 0-20 73l116 320-859-151a95 95 0 0 0-111 98l45 863z"/></svg></span><span id="brandName">MapleSheets</span></a>
+    <span class="lang-switch" id="langSwitch"><a id="langEn" href="homework.html" lang="en">English</a><a id="langFr" href="homework.html?lang=fr" lang="fr">Français</a></span>
+    <a class="acct" id="account" href="app.html">My account</a>
+  </div>
+  <h2 id="title">Homework</h2>
   <div class="row-c">
+    <label><span id="lblGrade">Grade</span>
+      <select id="grade"></select>
+    </label>
     <label><span id="lblSubject">Subject</span>
       <select id="subject"></select>
     </label>
