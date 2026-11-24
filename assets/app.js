@@ -10,7 +10,7 @@
   var GRADES = { 0: 'Kindergarten', 1: 'Grade 1', 2: 'Grade 2', 3: 'Grade 3', 4: 'Grade 4', 5: 'Grade 5', 6: 'Grade 6',
     7: 'Grade 7', 8: 'Grade 8', 9: 'Grade 9', 10: 'Grade 10', 11: 'Grade 11', 12: 'Grade 12' };
   // Grades with worksheets, per language. Keep in step with homework's hw-core.js and sender/pdf_maker.py (a test checks).
-  var READY = { en: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], fr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] };
+  var READY = { en: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], fr: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], us: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] };
   var READY_GRADES = READY.en;
   var QC_GRADES = { 0: 'Maternelle', 1: '1re année', 2: '2e année', 3: '3e année', 4: '4e année', 5: '5e année', 6: '6e année',
     7: 'Secondaire 1', 8: 'Secondaire 2', 9: 'Secondaire 3', 10: 'Secondaire 4', 11: 'Secondaire 5', 12: 'Grade 12' };
@@ -23,11 +23,30 @@
     ON: ['Ontario', 'America/Toronto'], PE: ['Prince Edward Island', 'America/Halifax'], QC: ['Quebec', 'America/Toronto'],
     SK: ['Saskatchewan', 'America/Regina'], YT: ['Yukon', 'America/Whitehorse']
   };
+  // US states (and DC): name and the time zone most of the state uses
+  var STATES = {
+    AL: ['Alabama', 'America/Chicago'], AK: ['Alaska', 'America/Anchorage'], AZ: ['Arizona', 'America/Phoenix'], AR: ['Arkansas', 'America/Chicago'],
+    CA: ['California', 'America/Los_Angeles'], CO: ['Colorado', 'America/Denver'], CT: ['Connecticut', 'America/New_York'], DE: ['Delaware', 'America/New_York'],
+    DC: ['District of Columbia', 'America/New_York'], FL: ['Florida', 'America/New_York'], GA: ['Georgia', 'America/New_York'], HI: ['Hawaii', 'Pacific/Honolulu'],
+    ID: ['Idaho', 'America/Denver'], IL: ['Illinois', 'America/Chicago'], IN: ['Indiana', 'America/New_York'], IA: ['Iowa', 'America/Chicago'],
+    KS: ['Kansas', 'America/Chicago'], KY: ['Kentucky', 'America/New_York'], LA: ['Louisiana', 'America/Chicago'], ME: ['Maine', 'America/New_York'],
+    MD: ['Maryland', 'America/New_York'], MA: ['Massachusetts', 'America/New_York'], MI: ['Michigan', 'America/New_York'], MN: ['Minnesota', 'America/Chicago'],
+    MS: ['Mississippi', 'America/Chicago'], MO: ['Missouri', 'America/Chicago'], MT: ['Montana', 'America/Denver'], NE: ['Nebraska', 'America/Chicago'],
+    NV: ['Nevada', 'America/Los_Angeles'], NH: ['New Hampshire', 'America/New_York'], NJ: ['New Jersey', 'America/New_York'], NM: ['New Mexico', 'America/Denver'],
+    NY: ['New York', 'America/New_York'], NC: ['North Carolina', 'America/New_York'], ND: ['North Dakota', 'America/Chicago'], OH: ['Ohio', 'America/New_York'],
+    OK: ['Oklahoma', 'America/Chicago'], OR: ['Oregon', 'America/Los_Angeles'], PA: ['Pennsylvania', 'America/New_York'], RI: ['Rhode Island', 'America/New_York'],
+    SC: ['South Carolina', 'America/New_York'], SD: ['South Dakota', 'America/Chicago'], TN: ['Tennessee', 'America/Chicago'], TX: ['Texas', 'America/Chicago'],
+    UT: ['Utah', 'America/Denver'], VT: ['Vermont', 'America/New_York'], VA: ['Virginia', 'America/New_York'], WA: ['Washington', 'America/Los_Angeles'],
+    WV: ['West Virginia', 'America/New_York'], WI: ['Wisconsin', 'America/Chicago'], WY: ['Wyoming', 'America/Denver']
+  };
+  var REGIONS = Object.assign({}, PROVINCES, STATES);
   var TIME_ZONES = {
     'America/St_Johns': 'Newfoundland time', 'America/Halifax': 'Atlantic time (Halifax)', 'America/Moncton': 'Atlantic time (Moncton)',
     'America/Toronto': 'Eastern time', 'America/Winnipeg': 'Central time', 'America/Regina': 'Saskatchewan time',
     'America/Edmonton': 'Mountain time', 'America/Vancouver': 'Pacific time', 'America/Whitehorse': 'Yukon time',
-    'America/Yellowknife': 'Mountain time (Yellowknife)', 'America/Iqaluit': 'Eastern time (Iqaluit)'
+    'America/Yellowknife': 'Mountain time (Yellowknife)', 'America/Iqaluit': 'Eastern time (Iqaluit)',
+    'America/New_York': 'US Eastern time', 'America/Chicago': 'US Central time', 'America/Denver': 'US Mountain time',
+    'America/Phoenix': 'Arizona time', 'America/Los_Angeles': 'US Pacific time', 'America/Anchorage': 'Alaska time', 'Pacific/Honolulu': 'Hawaii time'
   };
 
   function has(obj, key) { return Object.prototype.hasOwnProperty.call(obj, key); }
@@ -80,6 +99,9 @@
     'No children yet. Add one below.': 'Aucun enfant pour l’instant. Ajoutez-en un ci-dessous.',
     'Daily emails go out at about 4 pm {zone}, Monday to Friday. Weekends and {province} statutory holidays are skipped.':
       'Les courriels partent vers 16 h ({zone}), du lundi au vendredi. Les fins de semaine et les jours fériés de la province ({province}) sont sautés.',
+    'Daily emails go out at about 4 pm {zone}, Monday to Friday. Weekends and US federal holidays are skipped.':
+      'Les courriels partent vers 16 h ({zone}), du lundi au vendredi. Les fins de semaine et les jours fériés fédéraux américains sont sautés.',
+    ' US families get US worksheets, with Spanish as the second language.': ' Les familles américaines reçoivent les feuilles américaines, avec l’espagnol comme langue seconde.',
     ' Quebec families get worksheets and emails in French.': ' Les familles du Québec reçoivent les feuilles et les courriels en français.',
     'Sent': 'Envoyé', 'Sending…': 'Envoi…', 'No emails yet.': 'Aucun courriel pour l’instant.',
     'Use a first name or nickname (1 to 30 letters, no < > & or quotes).': 'Utilisez un prénom ou un surnom (1 à 30 lettres, sans < > & ni guillemets).',
@@ -96,6 +118,7 @@
       'Ouvrez le lien dans le même navigateur que celui où vous l’avez demandé, ou demandez un nouveau lien.',
     'This browser is too old to reset a password. Please try another browser.': 'Ce navigateur est trop ancien pour changer le mot de passe. Essayez un autre navigateur.',
     'Please choose a password that is different from your old one.': 'Choisissez un mot de passe différent de l’ancien.',
+    'Canada': 'Canada', 'United States': 'États-Unis', ' (US worksheets, with Spanish)': ' (feuilles américaines, avec espagnol)',
     'parents': 'parents', 'children': 'enfants', 'daily emails on': 'courriels quotidiens actifs', 'emails sent': 'courriels envoyés'
   };
   function t(text, vars) {
@@ -277,7 +300,8 @@
   function validEmail(s) { return /^[^\s@<>,;]+@[^\s@<>,;]+\.[A-Za-z]{2,}$/.test(s) && s.length <= 254; }
   function validNickname(s) { return /^[^<>&"\r\n\t]{1,30}$/.test(s) && s.trim() !== ''; }
   // Quebec families get French worksheets that follow Quebec's school years.
-  function langFor(province) { return province === 'QC' ? 'fr' : 'en'; }
+  // Which worksheets a family gets: fr = Quebec (French), us = United States, en = the rest of Canada.
+  function langFor(province) { return province === 'QC' ? 'fr' : has(STATES, province) ? 'us' : 'en'; }
   function isReady(grade, province) { return READY[langFor(province)].indexOf(Number(grade)) >= 0; }
   function gradeLabel(g, province) {
     var n = Number(g);
@@ -294,12 +318,15 @@
     SK: 'Saskatchewan', YT: 'Yukon' };
   var ZONES_FR = { 'America/St_Johns': 'heure de Terre-Neuve', 'America/Halifax': 'heure de l’Atlantique (Halifax)', 'America/Moncton': 'heure de l’Atlantique (Moncton)',
     'America/Toronto': 'heure de l’Est', 'America/Winnipeg': 'heure du Centre', 'America/Regina': 'heure de la Saskatchewan', 'America/Edmonton': 'heure des Rocheuses',
-    'America/Vancouver': 'heure du Pacifique', 'America/Whitehorse': 'heure du Yukon', 'America/Yellowknife': 'heure des Rocheuses (Yellowknife)', 'America/Iqaluit': 'heure de l’Est (Iqaluit)' };
-  function provinceName(k) { return LANG === 'fr' ? PROVINCES_FR[k] : PROVINCES[k][0]; }
+    'America/Vancouver': 'heure du Pacifique', 'America/Whitehorse': 'heure du Yukon', 'America/Yellowknife': 'heure des Rocheuses (Yellowknife)', 'America/Iqaluit': 'heure de l’Est (Iqaluit)',
+    'America/New_York': 'heure de l’Est (É.-U.)', 'America/Chicago': 'heure du Centre (É.-U.)', 'America/Denver': 'heure des Rocheuses (É.-U.)',
+    'America/Phoenix': 'heure de l’Arizona', 'America/Los_Angeles': 'heure du Pacifique (É.-U.)', 'America/Anchorage': 'heure de l’Alaska', 'Pacific/Honolulu': 'heure d’Hawaï' };
+  function provinceName(k) { return has(STATES, k) ? STATES[k][0] : LANG === 'fr' ? PROVINCES_FR[k] : PROVINCES[k][0]; }
   function zoneName(k) { return LANG === 'fr' ? ZONES_FR[k] : TIME_ZONES[k]; }
   function worksheetLink(child, province) {
     var q = new URLSearchParams({ grade: String(child.grade), level: child.level, subject: 'all' });
     if (langFor(province) === 'fr') q.set('lang', 'fr');
+    if (langFor(province) === 'us') q.set('country', 'us');
     return 'homework.html?' + q.toString();
   }
 
@@ -476,10 +503,15 @@
       var p = state.profile;
       if (p) {
         var prov = document.getElementById('province'), tz = document.getElementById('timeZone');
-        prov.replaceChildren.apply(prov, options(PROVINCES, p.province, provinceName));
+        prov.replaceChildren(
+          el('optgroup', { label: t('Canada') }, options(PROVINCES, p.province, provinceName)),
+          el('optgroup', { label: t('United States') }, options(STATES, p.province, provinceName)));
         tz.replaceChildren.apply(tz, options(TIME_ZONES, p.time_zone, zoneName));
-        document.getElementById('sendNote').textContent = t('Daily emails go out at about 4 pm {zone}, Monday to Friday. Weekends and {province} statutory holidays are skipped.',
-          { zone: zoneName(p.time_zone), province: provinceName(p.province) }) + (p.province === 'QC' ? t(' Quebec families get worksheets and emails in French.') : '');
+        var us = has(STATES, p.province);
+        document.getElementById('sendNote').textContent = (us
+          ? t('Daily emails go out at about 4 pm {zone}, Monday to Friday. Weekends and US federal holidays are skipped.', { zone: zoneName(p.time_zone) }) + t(' US families get US worksheets, with Spanish as the second language.')
+          : t('Daily emails go out at about 4 pm {zone}, Monday to Friday. Weekends and {province} statutory holidays are skipped.',
+            { zone: zoneName(p.time_zone), province: provinceName(p.province) })) + (p.province === 'QC' ? t(' Quebec families get worksheets and emails in French.') : '');
       }
       var byId = {};
       state.children.forEach(function (c) { byId[c.id] = c.nickname; });
@@ -512,12 +544,12 @@
     });
     document.getElementById('province').addEventListener('change', function (ev) {
       var tz = document.getElementById('timeZone');
-      if (has(PROVINCES, ev.target.value)) tz.value = PROVINCES[ev.target.value][1];
+      if (has(REGIONS, ev.target.value)) tz.value = REGIONS[ev.target.value][1];
     });
     document.getElementById('settings').addEventListener('submit', function (ev) {
       ev.preventDefault();
       var change = { province: ev.target.province.value, time_zone: ev.target.timeZone.value };
-      if (!has(PROVINCES, change.province) || !has(TIME_ZONES, change.time_zone)) return;
+      if (!has(REGIONS, change.province) || !has(TIME_ZONES, change.time_zone)) return;
       api.rest('PATCH', 'profiles?id=eq.' + encodeURIComponent(api.session().user.id), change, 'return=minimal')
         .then(function () { Object.assign(state.profile, change); render(); say(msg, t('Settings saved.'), true); }, fail);
     });
@@ -559,7 +591,7 @@
   // ------------------------------------------------------------------ start
 
   root.G2 = { Client: Client, AppError: AppError, friendly: friendly, validEmail: validEmail, validNickname: validNickname,
-    worksheetLink: worksheetLink, landing: landing, b64url: b64url, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES, READY: READY,
+    worksheetLink: worksheetLink, STATES: STATES, landing: landing, b64url: b64url, PROVINCES: PROVINCES, TIME_ZONES: TIME_ZONES, READY_GRADES: READY_GRADES, READY: READY,
     gradeLabel: gradeLabel, isReady: isReady, langFor: langFor, t: t, FR: FR, pageFor: pageFor };
 
   // Refuse to run inside another site's frame (GitHub Pages can't send the header that blocks this).

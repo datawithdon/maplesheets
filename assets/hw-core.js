@@ -10,12 +10,13 @@
   var sheetPolicy = TT ? TT.createPolicy('hw-sheet', { createHTML: function (html) { return html; } }) : null;
   var gradePolicy = TT ? TT.createPolicy('hw-grade', {
     createScriptURL: function (u) {
-      if (/^grades\/(?:en-(?:[0-9]|1[0-2])|fr-(?:[0-9]|1[01]))\.js$/.test(u)) return u;
+      if (/^grades\/(?:(?:en|us)-(?:[0-9]|1[0-2])|fr-(?:[0-9]|1[01]))\.js$/.test(u)) return u;
       throw new TypeError('Blocked script URL');
     }
   }) : null;
   // Grades that have worksheets, per language. Keep in step with app.js and sender/pdf_maker.py (a test checks).
-  var AVAILABLE = { en: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'], fr: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'] };
+  var AVAILABLE = { en: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'], fr: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11'],
+    us: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'] };
 
   var UI = {
     en: {
@@ -124,10 +125,18 @@
     100: { r: 14.5, label: '$1', fill: '#f0d579', sides: 11 },
     200: { r: 15.5, label: '$2', fill: '#e6e6e6', inner: '#f0d579' }
   };
+  // US coins: penny, nickel, dime, quarter (in their real size order: the dime is the smallest)
+  var COINS_US = {
+    1: { r: 10.5, label: '1¢', fill: '#d9a066' },
+    5: { r: 11.5, label: '5¢', fill: '#e6e6e6' },
+    10: { r: 9.5, label: '10¢', fill: '#e6e6e6' },
+    25: { r: 13, label: '25¢', fill: '#e6e6e6' },
+    100: { r: 14.5, label: '$1', fill: '#f0d579' }
+  };
   function coinsSvg(list) {
-    var H = 34, x = 1, parts = [];
+    var H = 34, x = 1, parts = [], set = country === 'us' ? COINS_US : COINS;
     list.forEach(function (c) {
-      var k = COINS[c], cx = x + k.r, cy = H / 2, s = '';
+      var k = set[c], cx = x + k.r, cy = H / 2, s = '';
       if (k.sides) {
         var pts = [];
         for (var i = 0; i < k.sides; i++) {
@@ -223,7 +232,41 @@
 
 
   // ===================== language-aware helpers for content files =====================
-  var lang = 'en';
+  var lang = 'en', country = 'ca';
+  // US sheets: Canadian spellings and a few Canada-only examples become American ones.
+  var US_PHRASES = [
+    ['Ottawa Ontario is Canada’s capital', 'Austin Texas is the capital of Texas'], ['Ottawa, Ontario, is Canada’s capital', 'Austin, Texas, is the capital of Texas'],
+    ['Victoria BC Halifax NS and Quebec City QC', 'Portland OR Boston MA and Austin TX'], ['Victoria, BC; Halifax, NS; and Quebec City, QC', 'Portland, OR; Boston, MA; and Austin, TX'],
+    ['lives in Moncton', 'lives in Dayton'], ['learn French', 'learn Spanish'],
+    ['Canada has ten provinces.', 'The United States has fifty states.'], ['Ottawa is the capital of Canada.', 'Washington, D.C., is the capital of the United States.'],
+    ['Hockey is the most exciting sport.', 'Baseball is the most exciting sport.'], ['Water freezes at 0 °C.', 'Water freezes at 32 °F.'],
+    ['The Bay of Fundy has very high tides.', 'The Grand Canyon is very deep.'], ['Canada has three oceans on its coasts.', 'Alaska is the largest US state.'],
+    ['The Rocky Mountains are in western Canada.', 'The Rocky Mountains are in the western United States.']
+  ];
+  var US_WORDS = { colour: 'color', colours: 'colors', coloured: 'colored', colourful: 'colorful', colouring: 'coloring', favourite: 'favorite', favourites: 'favorites',
+    neighbour: 'neighbor', neighbours: 'neighbors', neighbourhood: 'neighborhood', honour: 'honor', honoured: 'honored', labour: 'labor', humour: 'humor',
+    behaviour: 'behavior', flavour: 'flavor', flavours: 'flavors', harbour: 'harbor', rumour: 'rumor', vapour: 'vapor', armour: 'armor', odour: 'odor',
+    endeavour: 'endeavor', savoury: 'savory', centre: 'center', centres: 'centers', metre: 'meter', metres: 'meters', kilometre: 'kilometer', kilometres: 'kilometers',
+    centimetre: 'centimeter', centimetres: 'centimeters', millimetre: 'millimeter', millimetres: 'millimeters', litre: 'liter', litres: 'liters',
+    millilitre: 'milliliter', millilitres: 'milliliters', theatre: 'theater', fibre: 'fiber', grey: 'gray', travelled: 'traveled', travelling: 'traveling',
+    traveller: 'traveler', travellers: 'travelers', cancelled: 'canceled', labelled: 'labeled', modelled: 'modeled', levelled: 'leveled', fuelled: 'fueled',
+    jewellery: 'jewelry', cheque: 'check', cheques: 'checks', defence: 'defense', offence: 'offense', licence: 'license', practise: 'practice', practised: 'practiced',
+    practising: 'practicing', programme: 'program', catalogue: 'catalog', analyse: 'analyze', mum: 'mom', mitts: 'mittens', toque: 'winter hat',
+    washroom: 'restroom', pyjamas: 'pajamas', moustache: 'mustache', plough: 'plow', sceptical: 'skeptical' };
+  var US_RE = new RegExp('\\b(' + Object.keys(US_WORDS).join('|') + ')\\b', 'gi');
+  function usWord(w) {
+    var out = US_WORDS[w.toLowerCase()];
+    if (w.length > 1 && w === w.toUpperCase()) return out.toUpperCase();
+    return w.charAt(0) === w.charAt(0).toUpperCase() ? out.charAt(0).toUpperCase() + out.slice(1) : out;
+  }
+  function usText(text) {
+    US_PHRASES.forEach(function (p) { text = text.split(p[0]).join(p[1]); });
+    return text.replace(US_RE, usWord);
+  }
+  // only the words between tags change, never the markup itself
+  function usHtml(html) {
+    return country === 'us' ? html.replace(/(^|>)([^<]+)/g, function (m, a, t) { return a + usText(t); }) : html;
+  }
   function tx(o) { return has(o, lang) ? o[lang] : o.en; }
   // numbers: French uses a comma for decimals; both languages use a thin space for thousands
   function num(x, dp) {
@@ -231,7 +274,8 @@
     var neg = s.charAt(0) === '-';
     if (neg) s = s.slice(1);
     var parts = s.split('.'), whole = parts[0];
-    if (whole.length > 4) whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');  // Canadian style in both languages: 12 345
+    if (country === 'us' && whole.length > 3) whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');          // US style: 1,234
+    else if (whole.length > 4) whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');  // Canadian style in both languages: 12 345
     var out = whole + (parts[1] !== undefined ? (lang === 'fr' ? ',' : '.') + parts[1] : '');
     return (neg ? '−' : '') + out;
   }
@@ -290,7 +334,7 @@
     circ: circ, Q: Q, an: an, pad2: pad2, svg: svg, coinsSvg: coinsSvg, clockSvg: clockSvg, groupsSvg: groupsSvg, fracSvg: fracSvg,
     patternSvg: patternSvg, shapeAt: shapeAt, tx: tx, num: num, money: money, cap: cap, ucFirstHtml: ucFirstHtml, itemOf: itemOf, lim: lim,
     choiceKind: choiceKind, blankKind: blankKind, lineKind: lineKind, pairKind: pairKind, oddKind: oddKind,
-    lang: function () { return lang; }, ui: function () { return UI[lang]; }, open: function () { return UI[lang].open; }
+    lang: function () { return lang; }, country: function () { return country; }, usText: usText, ui: function () { return UI[lang]; }, open: function () { return UI[lang].open; }
   };
   var HW = window.HW = { H: H, AVAILABLE: AVAILABLE };
 
@@ -467,8 +511,9 @@
     try { return new URLSearchParams(window.location.search); } catch (e) { return new URLSearchParams(''); }
   }
   function readBasics() {
-    var p = params(), st = { lang: 'en', grade: '2' };
-    var v = p.get('lang'); if (v === 'fr') st.lang = 'fr';
+    var p = params(), st = { lang: 'en', grade: '2', ed: 'en' };
+    var v = p.get('lang'); if (v === 'fr') st.lang = st.ed = 'fr';
+    if (st.lang === 'en' && p.get('country') === 'us') st.ed = 'us';  // edition: en = Canada (English), fr = Quebec, us = United States
     v = p.get('grade'); if (v !== null && /^(0|[1-9]|1[0-2])$/.test(v)) st.grade = v;
     return st;
   }
@@ -497,6 +542,8 @@
   var $ = function (id) { return document.getElementById(id); };
   var state = readBasics(), PACK = null;
   lang = state.lang;
+  country = state.ed === 'us' ? 'us' : 'ca';
+  if (country === 'us') UI.en = Object.assign({}, UI.en, { country: 'USA' });
   function fail(text) {
     document.body.setAttribute('data-overflow', 'error');
     var warn = $('warn');
@@ -518,17 +565,18 @@
     $('title').textContent = u.grade(state.grade);
     $('account').textContent = u.account;
     $('account').href = lang === 'fr' ? 'app-fr.html' : 'app.html';
-    $('home').href = lang === 'fr' ? 'index-fr.html' : 'index.html';
+    $('home').href = state.ed === 'fr' ? 'index-fr.html' : state.ed === 'us' ? 'index-us.html' : 'index.html';
     $('brandName').textContent = u.brand;
     $('lblGrade').textContent = u.gradeLbl;
     var gsel = $('grade');
-    gsel.replaceChildren.apply(gsel, AVAILABLE[state.lang].map(function (g) { return opt(g, u.grade(g)); }));
+    gsel.replaceChildren.apply(gsel, AVAILABLE[state.ed].map(function (g) { return opt(g, u.grade(g)); }));
     gsel.value = state.grade;
     gsel.addEventListener('change', function () {
-      if (AVAILABLE[state.lang].indexOf(gsel.value) >= 0) window.location.href = gradeLink(gsel.value, state.lang);
+      if (AVAILABLE[state.ed].indexOf(gsel.value) >= 0) window.location.href = gradeLink(gsel.value, state.ed);
     });
-    $('langEn').className = lang === 'en' ? 'on' : '';
-    $('langFr').className = lang === 'fr' ? 'on' : '';
+    $('langEn').className = state.ed === 'en' ? 'on' : '';
+    $('langFr').className = state.ed === 'fr' ? 'on' : '';
+    $('langUs').className = state.ed === 'us' ? 'on' : '';
     [['lblSubject', 'subject'], ['lblLevel', 'level'], ['lblSeed', 'sheet'], ['lblDate', 'dateOn'], ['newSheet', 'newSheet'], ['print', 'print'], ['topicsLegend', 'topics'], ['lblKey', 'keyBox']]
       .forEach(function (x) { $(x[0]).textContent = u[x[1]]; });
     var subj = $('subject');
@@ -548,15 +596,17 @@
     tips.replaceChildren.apply(tips, u.tips.map(function (t) { var li = document.createElement('li'); li.textContent = t; return li; }));
   }
   // Switching grade or language loads a different worksheet file, so it opens a fresh page (keeping the level).
-  function gradeLink(g, l) {
+  function gradeLink(g, ed) {
     var q = new URLSearchParams({ grade: g });
-    if (l === 'fr') q.set('lang', 'fr');
+    if (ed === 'fr') q.set('lang', 'fr');
+    if (ed === 'us') q.set('country', 'us');
     q.set('level', state.level || 'medium');
     return 'homework.html?' + q.toString();
   }
   function syncControls() {
     $('langEn').href = gradeLink(state.grade, 'en');
     $('langFr').href = gradeLink(AVAILABLE.fr.indexOf(state.grade) >= 0 ? state.grade : AVAILABLE.fr[AVAILABLE.fr.length - 1], 'fr');
+    $('langUs').href = gradeLink(state.grade, 'us');
     var topicSubj = PACK.subjects.filter(function (s) { return s.topics; })[0];
     $('subject').value = state.subject;
     $('level').value = state.level;
@@ -570,6 +620,7 @@
     var q = new URLSearchParams();
     q.set('grade', state.grade);
     if (state.lang !== 'en') q.set('lang', state.lang);
+    if (state.ed === 'us') q.set('country', 'us');
     q.set('subject', state.subject); q.set('level', state.level); q.set('seed', String(state.seed));
     if (hasTopics()) q.set('topics', state.topics.join(','));
     if (state.date) q.set('date', isoDate(state.date));
@@ -579,7 +630,7 @@
   function render() {
     var main = $('sheet'), warn = $('warn');
     try {
-      var html = buildSheet(PACK, state);
+      var html = usHtml(buildSheet(PACK, state));
       main.innerHTML = sheetPolicy ? sheetPolicy.createHTML(html) : html;
     } catch (e) {
       main.textContent = '';
@@ -626,7 +677,7 @@
 
   // A content file calls this once it has loaded.
   HW.register = function (id, make) {
-    if (id !== state.lang + '-' + state.grade || PACK) return;
+    if (id !== state.ed + '-' + state.grade || PACK) return;
     try {
       var libs = window.HWLIB || {};
       Object.keys(libs).forEach(function (k) { if (!has(H, k)) H[k] = libs[k](H); });
@@ -642,11 +693,11 @@
     start();
   };
 
-  if (AVAILABLE[state.lang].indexOf(state.grade) < 0) {
+  if (AVAILABLE[state.ed].indexOf(state.grade) < 0) {
     fail(UI[lang].notReady);
   } else {
     var s = document.createElement('script');
-    var gradeUrl = 'grades/' + state.lang + '-' + state.grade + '.js';
+    var gradeUrl = 'grades/' + state.ed + '-' + state.grade + '.js';
     s.src = gradePolicy ? gradePolicy.createScriptURL(gradeUrl) : gradeUrl;
     s.onerror = function () { fail(UI[lang].cannot('missing file')); };
     document.head.appendChild(s);

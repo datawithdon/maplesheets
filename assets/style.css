@@ -54,6 +54,9 @@ header.top nav { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; al
 header.top nav a { text-decoration: none; color: var(--ink); font-weight: 650; padding: 8px 14px; border-radius: 999px; }
 header.top nav a:hover { background: var(--sky-soft); }
 header.top nav a.pill { background: var(--panel); border: 2px solid var(--line); }
+.country { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--panel); border: 2px solid var(--line); }
+header.top nav .country a { padding: 5px 12px; font-size: 14px; color: var(--soft); }
+header.top nav .country a.on { background: var(--sky); color: #fff; }
 
 /* ---------- buttons ---------- */
 button, .btn {

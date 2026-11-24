@@ -6,7 +6,7 @@ window.HWLIB = window.HWLIB || {};
 window.HWLIB.M = function (H) {
   var ri = H.ri, pick = H.pick, shuffle = H.shuffle, sample = H.sample, esc = H.esc, circ = H.circ, Q = H.Q, tx = H.tx, num = H.num;
   var BL = H.BL, BLS = H.BLS, BLM = H.BLM, BLL = H.BLL, BOX = H.BOX, TIME = H.TIME, svg = H.svg;
-  var fr = H.lang() === 'fr';
+  var fr = H.lang() === 'fr', us = H.country() === 'us';
 
   function lv(o, L) { return o && typeof o === 'object' && !Array.isArray(o) && ('easy' in o || 'medium' in o || 'hard' in o) ? o[L] : o; }
   function T(en, f) { return fr ? f : en; }
@@ -370,7 +370,7 @@ window.HWLIB.M = function (H) {
       if (t === 'of') return Q('pc:of' + p + ':' + base, n(p) + PCT + T(' of ', ' de ') + n(base) + ' = ' + BLS, n(p * base / 100));
       if (t === 'what') { var part = p * base / 100; return Q('pc:wh' + part + ':' + base, T('What percent of ' + n(base) + ' is ' + n(part) + '?', 'Quel pourcentage de ' + n(base) + ' est ' + n(part) + '?') + ' ' + BLS + PCT, n(p) + PCT); }
       if (t === 'sale') { var price = 100 * ri(R, 10, 120); return Q('pc:sa' + p + ':' + price, esc(T('A jacket costs ' + H.money(price) + '. It is ' + p + '% off. What is the sale price?', 'Un manteau coûte ' + H.money(price) + '. Il est en solde à ' + p + ' % de rabais. Quel est le prix réduit?')) + ' ' + BLM, H.money(price * (100 - p) / 100)); }
-      if (t === 'tax') { var pr = 100 * ri(R, 4, 80), tax = pick(R, [5, 13, 15]); return Q('pc:tx' + tax + ':' + pr, esc(T('A game costs ' + H.money(pr) + ' plus ' + tax + '% tax. What is the total?', 'Un jeu coûte ' + H.money(pr) + ' plus ' + tax + ' % de taxes. Quel est le total?')) + ' ' + BLM, H.money(Math.round(pr * (100 + tax) / 100))); }
+      if (t === 'tax') { var pr = 100 * ri(R, 4, 80), tax = pick(R, us ? [6, 7, 8] : [5, 13, 15]); return Q('pc:tx' + tax + ':' + pr, esc(T('A game costs ' + H.money(pr) + ' plus ' + tax + '% tax. What is the total?', 'Un jeu coûte ' + H.money(pr) + ' plus ' + tax + ' % de taxes. Quel est le total?')) + ' ' + BLM, H.money(Math.round(pr * (100 + tax) / 100))); }
       var old = 10 * ri(R, 2, 40), ch = pick(R, [10, 20, 25, 50]), up = R() < 0.5, nw = old * (100 + (up ? ch : -ch)) / 100;
       return Q('pc:ch' + old + ':' + nw, esc(T('A price changed from ' + H.money(old * 100) + ' to ' + H.money(nw * 100) + '. What is the percent ' + (up ? 'increase' : 'decrease') + '?', 'Un prix passe de ' + H.money(old * 100) + ' à ' + H.money(nw * 100) + '. Quel est le pourcentage ' + (up ? 'd’augmentation' : 'de diminution') + '?')) + ' ' + BLS + PCT, n(ch) + PCT);
     };
@@ -391,7 +391,9 @@ window.HWLIB.M = function (H) {
   function coins(cfg) {
     return function (R, L) {
       var c = lv(cfg, L), list = [], total, i;
-      do { var cnt = ri(R, 2, c.n); list = []; total = 0; for (i = 0; i < cnt; i++) { var v = pick(R, c.kinds); list.push(v); total += v; } } while (total > c.cap);
+      // US: pennies, nickels, dimes and quarters (no $2 coin)
+      var kinds = us ? [1].concat(c.kinds.filter(function (k) { return k !== 200; })) : c.kinds;
+      do { var cnt = ri(R, 2, c.n); list = []; total = 0; for (i = 0; i < cnt; i++) { var v = pick(R, kinds); list.push(v); total += v; } } while (total > c.cap);
       list.sort(function (x, y) { return y - x; });
       var ask = total >= 100 ? (fr ? 'Combien d’argent?<br>' + BLS + ' $' : 'How much money?<br>$' + BLS) : T('How much money?<br>' + BLS + '¢', 'Combien d’argent?<br>' + BLS + ' ¢');
       return Q('coin:' + list.join('-'), '<div class="row">' + H.coinsSvg(list) + '<span>' + ask + '</span></div>', total >= 100 ? H.money(total) : total + (fr ? '\u00a0¢' : '¢'));
@@ -429,9 +431,12 @@ window.HWLIB.M = function (H) {
 
   // ---------- measurement and geometry ----------
   var UNITS = [['mm', 'cm', 10], ['cm', 'm', 100], ['m', 'km', 1000], ['g', 'kg', 1000], ['mL', 'L', 1000]];
+  // US customary units (US sheets use these about two times out of three, like US schools)
+  var US_UNITS = [['in', 'ft', 12], ['ft', 'yd', 3], ['oz', 'lb', 16], ['cups', 'qt', 4], ['qt', 'gal', 4], ['pt', 'qt', 2]];
   function units(cfg) {
     return function (R, L) {
-      var c = lv(cfg, L), u = pick(R, UNITS), up = R() < 0.5, x;
+      var c = lv(cfg, L), usu = us && R() < 0.67, u = pick(R, usu ? US_UNITS : UNITS), up = R() < 0.5, x;
+      if (usu) c = { max: c.max, dec: false };
       if (up) { x = u[2] * ri(R, 1, c.max) + (c.dec ? ri(R, 1, 9) * u[2] / 10 : 0); return Q('un:' + x + u[0], n(x) + ' ' + u[0] + ' = ' + BLM + ' ' + u[1], n(round(x / u[2], 4)) + ' ' + u[1]); }
       x = ri(R, 1, c.max) + (c.dec ? ri(R, 1, 9) / 10 : 0);
       return Q('un:' + x + u[1], n(x) + ' ' + u[1] + ' = ' + BLM + ' ' + u[0], n(round(x * u[2], 4)) + ' ' + u[0]);
@@ -447,7 +452,7 @@ window.HWLIB.M = function (H) {
   // kinds: 'perim','area','tri','circleA','circleC','prism','cyl','sa'
   function geo(cfg) {
     return function (R, L) {
-      var c = lv(cfg, L), t = pick(R, c.kinds), u = pick(R, ['cm', 'm']), w = ri(R, 2, c.max || 12), h = ri(R, 2, c.max || 12), d = ri(R, 2, 10);
+      var c = lv(cfg, L), t = pick(R, c.kinds), u = pick(R, us ? ['in', 'ft', 'yd', 'cm', 'm'] : ['cm', 'm']), w = ri(R, 2, c.max || 12), h = ri(R, 2, c.max || 12), d = ri(R, 2, 10);
       if (t === 'perim' || t === 'area') {
         if (w === h && R() < 0.7) h = w + 1;
         var ask = t === 'perim' ? T('Perimeter = ', 'Périmètre = ') + BLS + ' ' + u : T('Area = ', 'Aire = ') + BLS + ' ' + u + '²';

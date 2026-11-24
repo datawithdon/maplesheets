@@ -138,9 +138,37 @@ window.HWLIB.C = function (H) {
     10: { verbs: Object.keys(W.EN_IRR), tenses: ['past', 'perfect', 'present', 'future'] }, 11: { verbs: Object.keys(W.EN_IRR), tenses: ['past', 'perfect', 'prog', 'future'] },
     12: { verbs: Object.keys(W.EN_IRR), tenses: ['past', 'perfect', 'prog', 'future', 'present'] }
   };
+  // Spanish on US sheets: present first, then past (preterite, imperfect), future and conditional, like US middle and high school.
+  var ES_REG = ['hablar', 'comer', 'vivir', 'bailar', 'cantar', 'escribir', 'beber', 'trabajar', 'estudiar', 'caminar', 'aprender', 'abrir', 'correr', 'escuchar', 'comprar', 'viajar'];
+  var ES_VERBS = {
+    4: { verbs: ['ser', 'tener'], tenses: ['present'] }, 5: { verbs: ['ser', 'tener', 'estar', 'ir', 'hablar', 'comer', 'vivir', 'jugar'], tenses: ['present'] },
+    6: { verbs: ['ser', 'tener', 'estar', 'ir', 'hacer', 'querer', 'hablar', 'comer', 'vivir', 'bailar', 'escribir', 'beber'], tenses: ['present'] },
+    7: { verbs: ['ser', 'ir', 'hacer', 'tener', 'jugar', 'hablar', 'comer', 'escribir', 'cantar', 'trabajar'], tenses: ['present', 'pret'] },
+    8: { verbs: ['ir', 'hacer', 'tener', 'estar', 'venir', 'ver', 'jugar', 'hablar', 'comer', 'vivir', 'estudiar', 'leer'], tenses: ['present', 'pret', 'near'] },
+    9: { verbs: ['ser', 'ir', 'ver', 'hacer', 'tener', 'poder', 'querer', 'hablar', 'comer', 'vivir', 'caminar', 'leer'], tenses: ['pret', 'near', 'impf'] },
+    10: { verbs: ['ser', 'ir', 'ver', 'hacer', 'tener', 'poder', 'decir', 'salir', 'hablar', 'aprender', 'vivir', 'viajar'], tenses: ['pret', 'impf', 'future'] },
+    11: { verbs: ['hacer', 'tener', 'poder', 'querer', 'venir', 'decir', 'salir', 'saber', 'hablar', 'aprender', 'escribir', 'viajar'], tenses: ['impf', 'future', 'cond'] },
+    12: { verbs: ['ser', 'ir', 'hacer', 'tener', 'poder', 'querer', 'venir', 'decir', 'saber'].concat(ES_REG.slice(0, 6)), tenses: ['pret', 'impf', 'future', 'cond'] }
+  };
+  function spanish(g, topics, prev, byLevel) {
+    var S = H.S;
+    function kinds(L) {
+      var k = S.vocabKinds(byLevel, { writeTarget: g >= 4 ? { easy: false, medium: g >= 6, hard: true } : false });
+      k.push(S.numWords(g <= 1 ? 10 : g === 2 ? 20 : g === 3 ? { easy: 20, medium: 39, hard: 69 } : 100));
+      if (g >= 3 && g <= 6) k.push(S.oddOne(topics.length >= 2 ? topics : prev));
+      if (g >= 3) k.push(S.gender(topics.filter(function (t) { return S.VOCAB[t].some(function (s) { return s.split('|')[2]; }); }).concat(['food', 'animals'])));
+      if (ES_VERBS[g] && L !== 'easy') k.push(S.verbs({ verbs: ES_VERBS[g].verbs, tenses: ES_VERBS[g].tenses, choice: g <= 7 }));
+      if (ES_VERBS[g] && L === 'hard') k.push(S.verbs({ verbs: ES_VERBS[g].verbs, tenses: ES_VERBS[g].tenses }));
+      if (g >= 6 && L !== 'easy') k.push(S.negate());
+      if (g >= 7 && L === 'hard') k.push(S.agree());
+      return k;
+    }
+    return { id: 'spanish', name: 'Spanish', kinds: kinds };
+  }
   function second(grade) {
     var g = Number(grade), topics = VT[g], prev = VT[Math.max(0, g - 1)];
     var byLevel = { easy: prev.concat(topics.slice(0, 2)).filter(function (t, i, a) { return a.indexOf(t) === i; }), medium: topics, hard: topics };
+    if (H.country() === 'us') return spanish(g, topics, prev, byLevel);
     function kinds(L) {
       var k = W.vocabKinds(byLevel, { writeTarget: g >= 4 ? { easy: false, medium: g >= 6, hard: true } : false });
       k.push(W.numWords(g <= 1 ? 10 : g === 2 ? 20 : g === 3 ? { easy: 20, medium: 39, hard: 69 } : 100));
