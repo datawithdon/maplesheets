@@ -525,6 +525,54 @@ window.HWLIB.M = function (H) {
     };
   }
 
+  // ---------- geometry course: polygons, parallel lines, similarity, circles, solids, transformations ----------
+  // kinds: 'poly','parallel','similar','arc','sector','inscribed','cone','sphere','perp','transform'
+  function piOf(a, b) { var f = rf(a, b); return (f[1] === 1 ? (f[0] === 1 ? '' : n(f[0])) : F(f[0], f[1])) + 'π'; }
+  function pt(x, y) { return '(' + n(x) + ', ' + n(y) + ')'; }
+  function geom(cfg) {
+    return function (R, L) {
+      var c = lv(cfg, L), t = pick(R, c.kinds), u = pick(R, us ? ['in', 'ft', 'cm', 'm'] : ['cm', 'm']), r = ri(R, 2, 12), X = '<i>x</i>';
+      if (t === 'poly') {
+        var s = pick(R, [5, 6, 8, 9, 10, 12]);
+        if (R() < 0.5) return Q('gm:ps' + s, T('The interior angles of a polygon with ' + s + ' sides add up to', 'Les angles intérieurs d’un polygone à ' + s + ' côtés totalisent') + ' ' + BLS + '°', n((s - 2) * 180) + '°');
+        return Q('gm:pe' + s, T('Each interior angle of a regular polygon with ' + s + ' sides measures', 'Chaque angle intérieur d’un polygone régulier à ' + s + ' côtés mesure') + ' ' + BLS + '°', n((s - 2) * 180 / s) + '°');
+      }
+      if (t === 'parallel') {
+        var x = pick(R, [35, 40, 50, 55, 65, 70, 75, 110, 115, 125, 130, 140]), k = ri(R, 0, 2);
+        var rel = [T('corresponding', 'correspondant'), T('alternate interior', 'alterne-interne'), T('same-side interior', 'interne du même côté')][k];
+        return Q('gm:pl' + x + k, T('Two parallel lines are cut by a transversal. One angle is ' + x + '°. The ' + rel + ' angle measures', 'Deux droites parallèles sont coupées par une sécante. Un angle mesure ' + x + '°. L’angle ' + rel + ' mesure') + ' ' + BLS + '°', (k === 2 ? 180 - x : x) + '°');
+      }
+      if (t === 'similar') {
+        var a = 2 * ri(R, 2, 6), b = ri(R, 3, 12), f = pick(R, [1.5, 2, 2.5, 3]);
+        return Q('gm:sm' + a + b + f, T('Triangle ABC is similar to triangle DEF. AB = ' + a + ', BC = ' + b + ', and DE = ' + n(f * a) + '. EF =', 'Le triangle ABC est semblable au triangle DEF. AB = ' + a + ', BC = ' + b + ' et DE = ' + n(f * a) + '. EF =') + ' ' + BLS, n(f * b));
+      }
+      var deg = pick(R, [30, 45, 60, 90, 120, 135, 150, 180, 240, 270]);
+      if (t === 'arc') return Q('gm:ar' + deg + r, T('A circle has radius ' + r + ' ' + u + '. The arc length for a ' + deg + '° central angle is (in terms of π)', 'Un cercle a un rayon de ' + r + ' ' + u + '. La longueur de l’arc d’un angle au centre de ' + deg + '° est (en fonction de π)') + ' ' + BLM + ' ' + u, piOf(deg * r, 180) + ' ' + u);
+      if (t === 'sector') return Q('gm:se' + deg + r, T('A circle has radius ' + r + ' ' + u + '. The area of a ' + deg + '° sector is (in terms of π)', 'Un cercle a un rayon de ' + r + ' ' + u + '. L’aire d’un secteur de ' + deg + '° est (en fonction de π)') + ' ' + BLM + ' ' + u + '²', piOf(deg * r * r, 360) + ' ' + u + '²');
+      if (t === 'inscribed') {
+        var arc = 2 * ri(R, 15, 85);
+        if (R() < 0.5) return Q('gm:ia' + arc, T('An inscribed angle intercepts an arc of ' + arc + '°. The inscribed angle measures', 'Un angle inscrit intercepte un arc de ' + arc + '°. L’angle inscrit mesure') + ' ' + BLS + '°', n(arc / 2) + '°');
+        return Q('gm:ib' + arc, T('An inscribed angle measures ' + n(arc / 2) + '°. Its intercepted arc measures', 'Un angle inscrit mesure ' + n(arc / 2) + '°. L’arc intercepté mesure') + ' ' + BLS + '°', n(arc) + '°');
+      }
+      if (t === 'cone') { var rc = ri(R, 2, 9), h = 3 * ri(R, 1, 5); return Q('gm:co' + rc + h, T('Cone: radius ' + rc + ' ' + u + ', height ' + h + ' ' + u + '. Volume (in terms of π) =', 'Cône : rayon ' + rc + ' ' + u + ', hauteur ' + h + ' ' + u + '. Volume (en fonction de π) =') + ' ' + BLM + ' ' + u + '³', piOf(rc * rc * h, 3) + ' ' + u + '³'); }
+      if (t === 'sphere') {
+        if (R() < 0.5) { var rs = pick(R, [3, 6, 9]); return Q('gm:sv' + rs, T('Sphere with radius ' + rs + ' ' + u + '. Volume (in terms of π) =', 'Sphère de rayon ' + rs + ' ' + u + '. Volume (en fonction de π) =') + ' ' + BLM + ' ' + u + '³', piOf(4 * rs * rs * rs, 3) + ' ' + u + '³'); }
+        return Q('gm:sa' + r, T('Sphere with radius ' + r + ' ' + u + '. Surface area (in terms of π) =', 'Sphère de rayon ' + r + ' ' + u + '. Aire (en fonction de π) =') + ' ' + BLM + ' ' + u + '²', piOf(4 * r * r, 1) + ' ' + u + '²');
+      }
+      if (t === 'perp') {
+        var m = rf(nz(R, -6, 6), pick(R, [1, 1, 2, 3])), b0 = ri(R, -9, 9), par = R() < 0.35, Y = '<i>y</i>';
+        var line = Y + ' = ' + (m[1] === 1 ? lin(m[0], b0, X) : fterm(m, X, true) + (b0 ? (b0 < 0 ? ' − ' + -b0 : ' + ' + b0) : ''));
+        return Q('gm:pp' + m.join('/') + b0 + par, T('Slope of a line ' + (par ? 'parallel' : 'perpendicular') + ' to ', 'Pente d’une droite ' + (par ? 'parallèle' : 'perpendiculaire') + ' à ') + line + ': ' + BLM, fshow(par ? m : rf(-m[1], m[0])));
+      }
+      var px = nz(R, -8, 8), py = nz(R, -8, 8), w = ri(R, 0, 4), dx = nz(R, -6, 6), dy = nz(R, -6, 6);
+      var name = [T('reflected over the <i>x</i>-axis', 'réfléchi par rapport à l’axe des <i>x</i>'), T('reflected over the <i>y</i>-axis', 'réfléchi par rapport à l’axe des <i>y</i>'),
+        T('rotated 90° counterclockwise about the origin', 'tourné de 90° dans le sens antihoraire autour de l’origine'), T('rotated 180° about the origin', 'tourné de 180° autour de l’origine'),
+        T('translated ' + (dx < 0 ? -dx + ' left' : dx + ' right') + ' and ' + (dy < 0 ? -dy + ' down' : dy + ' up'), 'translaté de ' + (dx < 0 ? -dx + ' vers la gauche' : dx + ' vers la droite') + ' et de ' + (dy < 0 ? -dy + ' vers le bas' : dy + ' vers le haut'))][w];
+      var img = [[px, -py], [-px, py], [-py, px], [-px, -py], [px + dx, py + dy]][w];
+      return Q('gm:tf' + px + ',' + py + w + dx + dy, T('Point ', 'Le point ') + pt(px, py) + T(' is ', ' est ') + name + T('. Its image is ', '. Son image est ') + '(' + BLS + ', ' + BLS + ')', pt(img[0], img[1]));
+    };
+  }
+
   // ---------- data and chance ----------
   function stats(cfg) {
     return function (R, L) {
@@ -764,6 +812,6 @@ window.HWLIB.M = function (H) {
     elapsed: elapsed, calendar: calendar, units: units, geo: geo, angles: angles, shapes: shapes, pythag: pythag, coords: coords, stats: stats, prob: prob,
     evalExpr: evalExpr, solve: solve, likeTerms: likeTerms, expand: expand, factor: factor, expLaws: expLaws, sciNot: sciNot, linear: linear,
     systems: systems, quad: quad, funcs: funcs, radicals: radicals, sequences: sequences, trig: trig, logs: logs, counting: counting,
-    interest: interest, calculus: calculus, shapePattern: shapePattern, numPattern: numPattern, eqGroups: eqGroups
+    interest: interest, calculus: calculus, geom: geom, shapePattern: shapePattern, numPattern: numPattern, eqGroups: eqGroups
   };
 };
